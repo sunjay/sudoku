@@ -14,6 +14,10 @@ void getMove(unsigned short* col, unsigned short* row, unsigned short* value);
 
 int main(int argc, char* argv[]) {
 	SudokuBoard* board = newSudokuBoard();
+	if (board == NULL) {
+		printf("Something went wrong allocating memory for a board.\n");
+		exit(1);
+	}
 
 	unsigned short move_col, move_row, value;
 	while (true) {

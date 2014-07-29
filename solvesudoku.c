@@ -11,4 +11,6 @@
 
 int main(int argc, char* argv[]) {
 	printf("Solving...Or am I?\n");
+
+	return 0;
 }
