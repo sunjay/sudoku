@@ -3,7 +3,6 @@
  *
  * Author: Sunjay Varma (www.sunjay.ca)
  */
-
 #include <stdlib.h>
 
 #include "sudoku.h"
@@ -29,7 +28,7 @@ SudokuBoard* newSudokuBoard() {
  *
  * Should always be freed after use.
  */
-SudokuBoard* solvedSudokuPuzzle() {
+SudokuBoard* solvedSudokuBoard() {
 	// A presolved board to shuffle around
 	short board_tiles[BOARD_SIZE*BOARD_SIZE] = {
 		1, 2, 3,  4, 5, 6,  7, 8, 9,
@@ -91,7 +90,7 @@ short* getBoardColumn(SudokuBoard* board, int col_i) {
  * Gets one of the boxes of the board of BOX_SIZE
  * Returns an array of size BOARD_SIZE that represents the box
  *
- * Box indexes work like this:
+ * Box indexes work like this for BOARD_SIZE = 9:
  * 0 1 2
  * 3 4 5
  * 6 7 8
@@ -111,4 +110,16 @@ short* getBoardBox(SudokuBoard* board, int box_i) {
 		}
 	}
 	return box;
+}
+
+/**
+ * Gets the tiles in the box surrounding a given tile between
+ *
+ * tile_i must be between 0 and BOARD_SIZE*BOARD_SIZE-1
+ */
+short* getTileBox(SudokuBoard* board, int tile_i) {
+	int box_x = (tile_i % ((int)BOARD_SIZE)) / ((int)BOX_SIZE);
+	int box_y = (tile_i / ((int)BOARD_SIZE)) / ((int)BOX_SIZE);
+	int box_i = box_y * BOX_SIZE + box_x;
+	return getBoardBox(board, box_i);
 }
