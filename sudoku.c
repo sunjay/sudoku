@@ -5,6 +5,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "sudoku.h"
 
@@ -200,32 +201,75 @@ short* getTileSurroundings(SudokuBoard* board, int col_i, int row_i) {
 
 /**
  * Checks if a value is in the given array
+ * Returns its index if found. Returns -1 otherwise.
  */
-bool arrayContains(short item, short* array, int size) {
+static int findItem(short item, short* array, int size) {
 	// linear search
 	for (int i = 0; i < size; i++) {
 		if (array[i] == item) {
-			return true;
+			return i;
 		}
 	}
-	return false;
+	return -1;
 }
 
 /**
  * Validates a single tile by checking if there are repetitions in the
  * tile's row, column or box. This is much faster than checking the entire
  * board after every move.
+ *
+ * Ignores zero values.
  */
 bool validateTile(SudokuBoard* board, int col_i, int row_i) {
 	short* row = getBoardRow(board, row_i);
 	short* col = getBoardColumn(board, col_i);
-	short* box = getTileBox(board, col_i, row_i);
+	short** box = getTileBox(board, col_i, row_i);
+
+	// the column and row of this tile in the box
+	int box_col_i = col_i % ((int)BOARD_SIZE);
+	int box_row_i = row_i % ((int)BOARD_SIZE);
 
 	// go through all possible values and check if each value is in any
 	// of these arrays more than once
-	for (short n = 1; n <= BOARD_SIZE; n++) {
-		//TODO: Deal with values in the same position?
+	for (short item = 1; item <= BOARD_SIZE; item++) {
+		// The COLUMN in which the item was found or -1
+		int item_col = findItem(item, row, BOARD_SIZE);
+		// The ROW in which the item was found or -1
+		int item_row = findItem(item, col, BOARD_SIZE);
+
+		// Account for the item being repeated in the two arrays, but actually
+		// just being in the correct position.
+		// For example,
+		// row: {0, 1, 2}
+		// col: {0, 1, 3}
+		// In this case, if the tile being checked is the middle one,
+		// this configuration is actually valid because though 1 is in
+		// both lists, it is in the corresponding position in both lists
+		if (item_col != -1 && item_row == item_col && item_col != col_i && item_row != row_i) {
+			// item found in both row and column
+			return false;
+		}
+
+		// Find the item in the box
+		int item_box_row;
+		int item_box_col = -1;
+		for (item_box_row = 0; item_box_row < BOX_SIZE; item_box_row++) {
+			for (int col = 0; col < BOX_SIZE; col++) {
+				if (box[item_box_row][col] == item) {
+					item_box_col = col;
+					break;
+				}
+			}
+			//TODO: ACCOUNT FOR MULTIPLE INSTANCES OF AN ITEM IN A SINGLE ROW
+		}
+
+		end:
+		if (item_box_col == -1) {
+			continue;
+		}
 	}
+
+	return true;
 }
 
 /**
@@ -235,7 +279,7 @@ bool validateTile(SudokuBoard* board, int col_i, int row_i) {
  */
 bool validateBoard(SudokuBoard* board) {
 	// A cache of the boxes so we don't need to retrieve them over and over again
-	short* box_cache[BOARD_SIZE];
+	/*short* box_cache[BOARD_SIZE];
 	for (int i = 0; i < BOARD_SIZE; i++) {
 		box_cache[i] = getBoardBox(board, i);
 	}
@@ -253,5 +297,6 @@ bool validateBoard(SudokuBoard* board) {
 	// go through and validate each tile
 	for (int i = 0; i < BOARD_SIZE; i++) {
 
-	}
+	}*/
+	return false;
 }
