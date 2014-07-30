@@ -134,8 +134,8 @@ short** getBoardBox(SudokuBoard* board, int box_i) {
 /**
  * Converts tile column/row position to box index
  */
-int coordinatesToBoxIndex(int col, int row) {
-	return (row / ((int)BOX_SIZE))*BOX_SIZE + col / ((int)BOX_SIZE);
+int coordinatesToBoxIndex(int col_i, int row_i) {
+	return (row_i / ((int)BOX_SIZE))*BOX_SIZE + col_i / ((int)BOX_SIZE);
 }
 
 /**
@@ -145,8 +145,8 @@ int coordinatesToBoxIndex(int col, int row) {
  *
  * Should be freed after use
  */
-short** getTileBox(SudokuBoard* board, int col, int row) {
-	int box_i = coordinatesToBoxIndex(col, row);
+short** getTileBox(SudokuBoard* board, int col_i, int row_i) {
+	int box_i = coordinatesToBoxIndex(col_i, row_i);
 	return getBoardBox(board, box_i);
 }
 
@@ -199,6 +199,36 @@ short* getTileSurroundings(SudokuBoard* board, int col_i, int row_i) {
 }
 
 /**
+ * Checks if a value is in the given array
+ */
+bool arrayContains(short item, short* array, int size) {
+	// linear search
+	for (int i = 0; i < size; i++) {
+		if (array[i] == item) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * Validates a single tile by checking if there are repetitions in the
+ * tile's row, column or box. This is much faster than checking the entire
+ * board after every move.
+ */
+bool validateTile(SudokuBoard* board, int col_i, int row_i) {
+	short* row = getBoardRow(board, row_i);
+	short* col = getBoardColumn(board, col_i);
+	short* box = getTileBox(board, col_i, row_i);
+
+	// go through all possible values and check if each value is in any
+	// of these arrays more than once
+	for (short n = 1; n <= BOARD_SIZE; n++) {
+		//TODO: Deal with values in the same position?
+	}
+}
+
+/**
  * Validates whether the board is correct
  *
  * A board is incorrect if it has any repetitions
@@ -222,6 +252,6 @@ bool validateBoard(SudokuBoard* board) {
 
 	// go through and validate each tile
 	for (int i = 0; i < BOARD_SIZE; i++) {
-		
+
 	}
 }
