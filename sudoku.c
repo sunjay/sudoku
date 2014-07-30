@@ -3,6 +3,7 @@
  *
  * Author: Sunjay Varma (www.sunjay.ca)
  */
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "sudoku.h"
@@ -17,41 +18,63 @@ SudokuBoard* newSudokuBoard() {
 	if (!sudoku) {
 		return NULL;
 	}
-	for (int i = 0; i < BOARD_SIZE*BOARD_SIZE; i++) {
-		sudoku->tiles[i] = 0;
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		sudoku->tiles[i] = calloc(BOARD_SIZE, sizeof(short));
+		if (!sudoku->tiles[i]) {
+			return NULL;
+		}
 	}
 	return sudoku;
 }
 
 /**
- * Generates a completely filled, pre-solved, random board
+ * Generates a valid, completely filled, pre-solved, random board
+ *
+ * Currently only supports b
  *
  * Should always be freed after use.
  */
 SudokuBoard* solvedSudokuBoard() {
 	// A presolved board to shuffle around
-	short board_tiles[BOARD_SIZE*BOARD_SIZE] = {
-		1, 2, 3,  4, 5, 6,  7, 8, 9,
-		4, 5, 6,  7, 8, 9,  1, 2, 3,
-		7, 8, 9,  1, 2, 3,  4, 5, 6,
-
-		2, 3, 4,  5, 6, 7,  8, 9, 1,
-		5, 6, 7,  8, 9, 1,  2, 3, 4,
-		8, 9, 1,  2, 3, 4,  5, 6, 7,
-
-		3, 4, 5,  6, 7, 8,  9, 1, 2,
-		6, 7, 8,  9, 1, 2,  3, 4, 5,
-		9, 1, 2,  3, 4, 5,  6, 7, 8
-	};
-	//TODO: Shuffle rows and columns before assigning
-	SudokuBoard* board = malloc(sizeof(SudokuBoard));
-	if (!board) {
+	SudokuBoard* board = newSudokuBoard();
+	if (board == NULL) {
 		return NULL;
 	}
-	for (int i = 0; i < BOARD_SIZE*BOARD_SIZE; i++) {
-		board->tiles[i] = board_tiles[i];
-	}
+
+	short row0[BOARD_SIZE] = {1, 2, 3,  4, 5, 6,  7, 8, 9};
+	short row1[BOARD_SIZE] = {4, 5, 6,  7, 8, 9,  1, 2, 3};
+	short row2[BOARD_SIZE] = {7, 8, 9,  1, 2, 3,  4, 5, 6};
+
+	short row3[BOARD_SIZE] = {2, 3, 4,  5, 6, 7,  8, 9, 1};
+	short row4[BOARD_SIZE] = {5, 6, 7,  8, 9, 1,  2, 3, 4};
+	short row5[BOARD_SIZE] = {8, 9, 1,  2, 3, 4,  5, 6, 7};
+
+	short row6[BOARD_SIZE] = {3, 4, 5,  6, 7, 8,  9, 1, 2};
+	short row7[BOARD_SIZE] = {6, 7, 8,  9, 1, 2,  3, 4, 5};
+	short row8[BOARD_SIZE] = {9, 1, 2,  3, 4, 5,  6, 7, 8};
+
+	//TODO: Shuffle rows and columns randomly
+	setBoardRow(board, 0, row0);
+	setBoardRow(board, 1, row1);
+	setBoardRow(board, 2, row2);
+	setBoardRow(board, 3, row3);
+	setBoardRow(board, 4, row4);
+	setBoardRow(board, 5, row5);
+	setBoardRow(board, 6, row6);
+	setBoardRow(board, 7, row7);
+	setBoardRow(board, 8, row8);
 	return board;
+}
+
+/**
+ * Sets all items in a single board row to items
+ *
+ * items must be exactly BOARD_SIZE size
+ */
+void setBoardRow(SudokuBoard* board, int row_i, short* items) {
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		board->tiles[row_i][i] = items[i];
+	}
 }
 
 /**
@@ -60,14 +83,7 @@ SudokuBoard* solvedSudokuBoard() {
  * Should be freed after use
  */
 short* getBoardRow(SudokuBoard* board, int row_i) {
-	short* row = malloc(sizeof(short)*BOARD_SIZE);
-	if (!row) {
-		return NULL;
-	}
-	for (int i = 0; i < BOARD_SIZE; i++) {
-		row[i] = board->tiles[BOARD_SIZE * row_i + i];
-	}
-	return row;
+	return board->tiles[row_i];
 }
 
 /**
@@ -80,15 +96,16 @@ short* getBoardColumn(SudokuBoard* board, int col_i) {
 	if (!col) {
 		return NULL;
 	}
+
 	for (int i = 0; i < BOARD_SIZE; i++) {
-		col[i] = board->tiles[i * BOARD_SIZE + col_i];
+		col[i] = board->tiles[i][col_i];
 	}
 	return col;
 }
 
 /**
  * Gets one of the boxes of the board of BOX_SIZE
- * Returns an array of size BOARD_SIZE that represents the box
+ * Returns an array of array pointers that represents the box
  *
  * Box indexes work like this for BOARD_SIZE = 9:
  * 0 1 2
@@ -97,18 +114,18 @@ short* getBoardColumn(SudokuBoard* board, int col_i) {
  *
  * Should be freed after use
  */
-short* getBoardBox(SudokuBoard* board, int box_i) {
-	short* box = malloc(sizeof(short)*BOARD_SIZE);
+short** getBoardBox(SudokuBoard* board, int box_i) {
+	short** box = malloc(sizeof(short*)*BOX_SIZE);
 	if (!box) {
 		return NULL;
 	}
 
-	int box_x = box_i % BOX_SIZE, box_y = box_i / BOX_SIZE;
-	int start_x = box_x * BOX_SIZE, start_y = box_y * BOX_SIZE * BOARD_SIZE;
-	int start_offset = start_y + start_x;
+	int y_offset = (box_i / ((int)BOX_SIZE)) * BOX_SIZE;
+	int x_offset = (box_i % ((int)BOX_SIZE)) * BOX_SIZE;
 	for (int i = 0; i < BOX_SIZE; i++) {
+		box[i] = malloc(sizeof(short)*BOX_SIZE);
 		for (int j = 0; j < BOX_SIZE; j++) {
-			box[i * BOX_SIZE + j] = board->tiles[start_offset + i*BOARD_SIZE + j];
+			box[i][j] = board->tiles[y_offset + i][x_offset + j];
 		}
 	}
 	return box;
@@ -117,32 +134,13 @@ short* getBoardBox(SudokuBoard* board, int box_i) {
 /**
  * Gets the tiles in the box surrounding a given tile between
  *
- * tile_i must be between 0 and BOARD_SIZE*BOARD_SIZE-1
+ * col and row are the row and column index of the tile
  *
  * Should be freed after use
  */
-short* getTileBox(SudokuBoard* board, int tile_i) {
-	int box_x = (tile_i % ((int)BOARD_SIZE)) / ((int)BOX_SIZE);
-	int box_y = (tile_i / ((int)BOARD_SIZE)) / ((int)BOX_SIZE);
-	int box_i = box_y * BOX_SIZE + box_x;
+short** getTileBox(SudokuBoard* board, int col, int row) {
+	int box_i = (row / ((int)BOX_SIZE))*BOX_SIZE + col / ((int)BOX_SIZE);
 	return getBoardBox(board, box_i);
-}
-
-/**
- * Methods for converting tile index to tile coordinates
- */
-short tileIndexToColumn(int tile_i) {
-	return tile_i % ((int)BOARD_SIZE);
-}
-short tileIndexToRow(int tile_i) {
-	return tile_i / ((int)BOARD_SIZE);
-}
-
-/**
- * Converts from tile coordinates (column, row) to tile index
- */
-int tileCoordinatesToIndex(short col, short row) {
-	return row * BOARD_SIZE + col;
 }
 
 /**
@@ -155,12 +153,10 @@ int tileCoordinatesToIndex(short col, short row) {
  *
  * Should be freed after use
  */
-short* getTileSurroundings(SudokuBoard* board, int tile_i) {
-	int col_i = tileIndexToColumn(tile_i);
-	int row_i = tileIndexToRow(tile_i);
+short* getTileSurroundings(SudokuBoard* board, int col_i, int row_i) {
 	short* col = getBoardColumn(board, col_i);
 	short* row = getBoardRow(board, row_i);
-	short* box = getTileBox(board, tile_i);
+	short** box = getTileBox(board, col_i, row_i);
 
 	short* numbers = calloc(BOARD_SIZE, sizeof(short));
 	if (!numbers) {
@@ -183,8 +179,8 @@ short* getTileSurroundings(SudokuBoard* board, int tile_i) {
 			}
 			numbers[value-1] = value;
 		}
-		if (box[i] != 0) {
-			short value = box[i];
+		if (box[i / BOX_SIZE][i % BOX_SIZE] != 0) {
+			short value = box[i / BOX_SIZE][i % BOX_SIZE];
 			if (numbers[value-1] == value) {
 				found++;
 			}
