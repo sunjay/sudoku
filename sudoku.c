@@ -132,6 +132,13 @@ short** getBoardBox(SudokuBoard* board, int box_i) {
 }
 
 /**
+ * Converts tile column/row position to box index
+ */
+int coordinatesToBoxIndex(int col, int row) {
+	return (row / ((int)BOX_SIZE))*BOX_SIZE + col / ((int)BOX_SIZE);
+}
+
+/**
  * Gets the tiles in the box surrounding a given tile between
  *
  * col and row are the row and column index of the tile
@@ -139,7 +146,7 @@ short** getBoardBox(SudokuBoard* board, int box_i) {
  * Should be freed after use
  */
 short** getTileBox(SudokuBoard* board, int col, int row) {
-	int box_i = (row / ((int)BOX_SIZE))*BOX_SIZE + col / ((int)BOX_SIZE);
+	int box_i = coordinatesToBoxIndex(col, row);
 	return getBoardBox(board, box_i);
 }
 
@@ -189,4 +196,32 @@ short* getTileSurroundings(SudokuBoard* board, int col_i, int row_i) {
 	}
 
 	return numbers;
+}
+
+/**
+ * Validates whether the board is correct
+ *
+ * A board is incorrect if it has any repetitions
+ */
+bool validateBoard(SudokuBoard* board) {
+	// A cache of the boxes so we don't need to retrieve them over and over again
+	short* box_cache[BOARD_SIZE];
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		box_cache[i] = getBoardBox(board, i);
+	}
+
+	short* columns_cache[BOARD_SIZE];
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		columns_cache[i] = getBoardColumn(board, i);
+	}
+
+	short* rows_cache[BOARD_SIZE];
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		rows_cache[i] = getBoardRow(board, i);
+	}
+
+	// go through and validate each tile
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		
+	}
 }
