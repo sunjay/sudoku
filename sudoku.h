@@ -25,7 +25,7 @@ void setBoardRow(SudokuBoard* board, int row_i, short* items);
 
 // Utility functions
 int coordinatesToBoxIndex(int col_i, int row_i);
-SudokuBoard* copyBoard(SudokuBoard* board);
+SudokuBoard* copySudokuBoard(SudokuBoard* board);
 
 // Board validation methods
 bool isValidTile(SudokuBoard* board, int col_i, int row_i);

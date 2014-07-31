@@ -33,7 +33,7 @@ SudokuBoard* newSudokuBoard() {
  *
  * Should always be freed after use.
  */
-SudokuBoard* copyBoard(SudokuBoard* board) {
+SudokuBoard* copySudokuBoard(SudokuBoard* board) {
 	SudokuBoard* copy = malloc(sizeof(SudokuBoard));
 	if (!copy) {
 		return NULL;
