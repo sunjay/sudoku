@@ -1,6 +1,8 @@
 #ifndef __SUDOKU_DEFS
 #define __SUDOKU_DEFS
 
+#include <stdbool.h>
+
 #include "boardproperties.h"
 
 typedef struct {
@@ -23,5 +25,10 @@ void setBoardRow(SudokuBoard* board, int row_i, short* items);
 
 // Utility functions
 int coordinatesToBoxIndex(int col_i, int row_i);
+
+// Board validation methods
+bool isValidTile(SudokuBoard* board, int col_i, int row_i);
+bool isValidBoard(SudokuBoard* board);
+bool isCompleteBoard(SudokuBoard* board);
 
 #endif
