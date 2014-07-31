@@ -10,6 +10,8 @@
 #include "sudoku.h"
 #include "drawboard.h"
 
+#define EOL '\n'
+
 void getMove(unsigned short* col, unsigned short* row, unsigned short* value);
 
 int main(int argc, char* argv[]) {
@@ -32,11 +34,23 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
+void readEOL() {
+	// read until the end of line or end of file
+	char c;
+	while (true) {
+		c = getchar();
+		if (c == EOL || c == EOF) {
+			return;
+		}
+	}
+}
+
 void getMove(unsigned short* col, unsigned short* row, unsigned short* value) {
 	char colLetter;
 	int max_value = BOARD_SIZE;
 	while (true) {
 		int itemsRead = scanf("%1c%1hd%1hd", &colLetter, row, value);
+		readEOL();
 		if (itemsRead == EOF) {
 			exit(0);
 		}
