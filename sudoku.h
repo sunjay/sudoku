@@ -21,7 +21,7 @@ short** getTileBox(SudokuBoard* board, int col_i, int row_i);
 short* getTileSurroundings(SudokuBoard* board, int col_i, int row_i);
 
 // Board set methods
-void setBoardRow(SudokuBoard* board, int row_i, short* items);
+void setBoardRow(SudokuBoard* board, int row_i, short items[]);
 
 // Utility functions
 int coordinatesToBoxIndex(int col_i, int row_i);

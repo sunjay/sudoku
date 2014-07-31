@@ -5,8 +5,8 @@ OBJECTS = sudoku.o drawboard.o inputhandler.o
 playsudoku : $(OBJECTS) playsudoku.o
 	$(CC) $(CFLAGS) playsudoku.o $(OBJECTS) -o playsudoku
 
-solvesudoku : $(OBJECTS) solvesudoku.o puzzlesolver.o
-	$(CC) $(CFLAGS) solvesudoku.o puzzlesolver.o $(OBJECTS) -o solvesudoku
+solvesudoku : $(OBJECTS) solvesudoku.o puzzlesolver.o boardparser.o
+	$(CC) $(CFLAGS) solvesudoku.o puzzlesolver.o boardparser.o $(OBJECTS) -o solvesudoku
 
 madness : madness.o
 	$(CC) $(CFLAGS) madness.o -o madness

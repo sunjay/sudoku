@@ -2,7 +2,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#define EOL '\n'
+#include "inputhandler.h"
+
 #define CHUNK_SIZE 64
 
 char* getline() {

@@ -7,21 +7,19 @@
  * Use 0 to mark an empty tile
  */
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 #include "sudoku.h"
-#include "inputhandler.h"
+#include "drawboard.h"
+#include "boardparser.h"
 
 int main(int argc, char* argv[]) {
-	char* line;
 	while (true) {
-		line = getline();
-		if (line == NULL) { // EOF
+		SudokuBoard* board = readBoard();
+		if (board == NULL) {
 			break;
 		}
-		// TODO: Write function to parse board
+		drawSudokuBoard(board);
 	}
 
 	return 0;

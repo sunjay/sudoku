@@ -91,7 +91,7 @@ SudokuBoard* solvedSudokuBoard() {
  *
  * items must be exactly BOARD_SIZE size
  */
-void setBoardRow(SudokuBoard* board, int row_i, short* items) {
+void setBoardRow(SudokuBoard* board, int row_i, short items[]) {
 	for (int i = 0; i < BOARD_SIZE; i++) {
 		board->tiles[row_i][i] = items[i];
 	}
