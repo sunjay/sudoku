@@ -7,11 +7,13 @@
  * Use 0 to mark an empty tile
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "sudoku.h"
 #include "drawboard.h"
 #include "boardparser.h"
+#include "puzzlesolver.h"
 
 int main(int argc, char* argv[]) {
 	while (true) {
@@ -19,8 +21,14 @@ int main(int argc, char* argv[]) {
 		if (board == NULL) {
 			break;
 		}
-		
-		drawSudokuBoardSimple(board);
+
+		SudokuBoard* solved = solveBoard(board);
+
+		if (solved == NULL) {
+			printf("No solution.\n");
+			continue;
+		}
+		drawSudokuBoardSimple(solved);
 	}
 
 	return 0;
