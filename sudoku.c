@@ -29,6 +29,25 @@ SudokuBoard* newSudokuBoard() {
 }
 
 /**
+ * Copies a board and all of its values
+ *
+ * Should always be freed after use.
+ */
+SudokuBoard* copyBoard(SudokuBoard* board) {
+	SudokuBoard* copy = malloc(sizeof(SudokuBoard));
+	if (!copy) {
+		return NULL;
+	}
+
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		for (int j = 0; j < BOARD_SIZE; j++) {
+			copy->tiles[i][j] = board->tiles[i][j];
+		}
+	}
+	return copy;
+}
+
+/**
  * Generates a valid, completely filled, pre-solved, random board
  *
  * Currently only supports b
