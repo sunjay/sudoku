@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -g -O2 -std=c99 -Wall
-OBJECTS = sudoku.o drawboard.o
+OBJECTS = sudoku.o drawboard.o inputhandler.o
 
 playsudoku : $(OBJECTS) playsudoku.o
 	$(CC) $(CFLAGS) playsudoku.o $(OBJECTS) -o playsudoku

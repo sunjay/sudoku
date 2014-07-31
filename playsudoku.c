@@ -9,9 +9,7 @@
 
 #include "sudoku.h"
 #include "drawboard.h"
-
-#define EOL '\n'
-#define CHUNK_SIZE 64
+#include "inputhandler.h"
 
 void getMove(unsigned short* col, unsigned short* row, unsigned short* value);
 
@@ -33,36 +31,6 @@ int main(int argc, char* argv[]) {
 
 	free(board);
 	return 0;
-}
-
-char* getline() {
-	// read until the end of line or end of file
-	char c;
-	char* line = malloc(sizeof(char)*CHUNK_SIZE);
-
-	int i = 0;
-	int size = CHUNK_SIZE;
-	while (true) {
-		c = getchar();
-		if (c == EOF) {
-			break;
-		}
-
-		if (i >= size) {
-			size += CHUNK_SIZE;
-			line = realloc(line, sizeof(char)*size);
-		}
-
-		line[i++] = c;
-		if (c == EOL) {
-			break;
-		}
-	}
-	if (i == 0) {
-		return NULL;
-	}
-
-	return realloc(line, sizeof(char)*i);
 }
 
 void getMove(unsigned short* col, unsigned short* row, unsigned short* value) {
