@@ -2,6 +2,7 @@
 
 #include "sudoku.h"
 
+static void simpleSolver(SudokuBoard* board);
 static bool more_than_one(short value, short items[], int length);
 
 /**
@@ -9,6 +10,29 @@ static bool more_than_one(short value, short items[], int length);
  * went horribly wrong.
  */
 SudokuBoard* solveBoard(SudokuBoard* board) {
+	// try the simplest algorithm first
+	// this will remove any obvious solutions
+	simpleSolver(board);
+
+	if (isCompleteBoard(board)) {
+		return board;
+	}
+
+	return board;
+}
+
+/**
+ * Uses the simplest solving algorithm possible.
+ *
+ * Simply puts any obvious solutions in their places. That means
+ * that if there is only one possible value for a specific position,
+ * that value will be placed. No guessing.
+ * Stops searching once no more obvious insertions remain.
+ * Not guaranteed to produce a complete solution.
+ *
+ * Modifies board in place.
+ */
+static void simpleSolver(SudokuBoard* board) {
 	bool foundValue;
 	while (true) {
 		foundValue = false;
@@ -43,12 +67,6 @@ SudokuBoard* solveBoard(SudokuBoard* board) {
 			break;
 		}
 	}
-
-	if (!isCompleteBoard(board)) {
-		return NULL;
-	}
-
-	return board;
 }
 
 static bool more_than_one(short value, short items[], int length) {
