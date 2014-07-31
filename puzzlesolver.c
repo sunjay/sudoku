@@ -1,38 +1,25 @@
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "sudoku.h"
 
-static void simpleSolver(SudokuBoard* board);
-static bool more_than_one(short value, short items[], int length);
+struct EmptyTile {
+	int row;
+	int col;
+	short* available_values;
+	int available_count;
+};
+
+static int count(short value, short items[], int length);
+static void sortEmptyTiles(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], int length);
 
 /**
  * Sudoku solving algorithm. Returns the solved board or NULL if something
  * went horribly wrong.
  */
 SudokuBoard* solveBoard(SudokuBoard* board) {
-	// try the simplest algorithm first
-	// this will remove any obvious solutions
-	simpleSolver(board);
-
-	if (isCompleteBoard(board)) {
-		return board;
-	}
-
-	return board;
-}
-
-/**
- * Uses the simplest solving algorithm possible.
- *
- * Simply puts any obvious solutions in their places. That means
- * that if there is only one possible value for a specific position,
- * that value will be placed. No guessing.
- * Stops searching once no more obvious insertions remain.
- * Not guaranteed to produce a complete solution.
- *
- * Modifies board in place.
- */
-static void simpleSolver(SudokuBoard* board) {
+	struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE];
+	int empty_i = 0;
 	bool foundValue;
 	while (true) {
 		foundValue = false;
@@ -45,7 +32,15 @@ static void simpleSolver(SudokuBoard* board) {
 
 				// empty tile
 				short* available_values = getTileSurroundings(board, j, i);
-				if (more_than_one(0, available_values, BOARD_SIZE)) {
+				int available_count = count(0, available_values, BOARD_SIZE);
+				if (available_count > 1) {
+					// Save the empty tile for further propagation
+					struct EmptyTile tile;
+					tile.row = i;
+					tile.col = j;
+					tile.available_values = available_values;
+					tile.available_count = available_count;
+					emptyTiles[empty_i++] = tile;
 					continue; // more than one possible value to place here
 				}
 
@@ -67,16 +62,64 @@ static void simpleSolver(SudokuBoard* board) {
 			break;
 		}
 	}
+
+	if (isCompleteBoard(board)) {
+		return board;
+	}
+
+	// go through remaining emptyTiles and make guesses
+	if (empty_i == 0) {
+		// no empty tiles
+		return NULL;
+	}
+	sortEmptyTiles(emptyTiles, empty_i);
+	for (int i = 0; i < empty_i; i++) {
+		struct EmptyTile tile = emptyTiles[i];
+		printf("%d %d %d\n", tile.col, tile.row, tile.available_count);
+	}
+
+	return board;
 }
 
-static bool more_than_one(short value, short items[], int length) {
+static int count(short value, short items[], int length) {
 	int n = 0;
 	for (int i = 0; i < length; i++) {
 		if (items[i] == value) {
-			if ((++n) > 1) {
-				return true;
-			}
+			n++;
 		}
 	}
-	return false;
+	return n;
+}
+
+/**
+ * Swaps a and b
+ */
+static void swapEmptyTiles(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], int a, int b) {
+	struct EmptyTile temp = emptyTiles[a];
+	emptyTiles[a] = emptyTiles[b];
+	emptyTiles[b] = temp;
+}
+
+/**
+ * Sort the empty tiles so that the ones with the smallest number of available
+ * possibilities are first.
+ */
+static void sortEmptyTiles(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], int length) {
+	if (length == 0) {
+		return;
+	}
+
+	// simple selection sort
+	for (int i = 0; i < length; i++) {
+		int best_i = 0;
+		for (int j = i+1; j < BOARD_SIZE*BOARD_SIZE; j++) {
+			struct EmptyTile tile = emptyTiles[j];
+			if (tile.available_count < emptyTiles[best_i].available_count) {
+				best_i = j;
+			}
+		}
+		if (i != best_i) {
+			swapEmptyTiles(emptyTiles, i, best_i);
+		}
+	}
 }
