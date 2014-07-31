@@ -11,6 +11,7 @@
 #include "drawboard.h"
 
 #define EOL '\n'
+#define CHUNK_SIZE 64
 
 void getMove(unsigned short* col, unsigned short* row, unsigned short* value);
 
@@ -34,23 +35,47 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
-void readEOL() {
+char* getline() {
 	// read until the end of line or end of file
 	char c;
+	char* line = malloc(sizeof(char)*CHUNK_SIZE);
+
+	int i = 0;
+	int size = CHUNK_SIZE;
 	while (true) {
 		c = getchar();
-		if (c == EOL || c == EOF) {
-			return;
+		if (c == EOF) {
+			break;
+		}
+
+		if (i >= size) {
+			size += CHUNK_SIZE;
+			line = realloc(line, sizeof(char)*size);
+		}
+
+		line[i++] = c;
+		if (c == EOL) {
+			break;
 		}
 	}
+	if (i == 0) {
+		return NULL;
+	}
+
+	return realloc(line, sizeof(char)*i);
 }
 
 void getMove(unsigned short* col, unsigned short* row, unsigned short* value) {
 	char colLetter;
 	int max_value = BOARD_SIZE;
 	while (true) {
-		int itemsRead = scanf("%1c%1hd%1hd", &colLetter, row, value);
-		readEOL();
+		char* line = getline();
+		if (line == NULL) { // EOF
+			exit(0);
+		}
+		int itemsRead = sscanf(line, "%1c%1hd%1hd", &colLetter, row, value);
+		free(line);
+
 		if (itemsRead == EOF) {
 			exit(0);
 		}
@@ -58,9 +83,9 @@ void getMove(unsigned short* col, unsigned short* row, unsigned short* value) {
 			printf("Invalid input.\n");
 			continue;
 		}
-		*col = colLetter - LETTER_A;
+		*col = toupper(colLetter) - LETTER_A;
 		unsigned int colValue = *col, rowValue = *row, number = *value;
-		if (colValue < 0 || colValue > max_value || rowValue < 0 || rowValue > max_value || number < 0 || number > max_value) {
+		if (colValue < 0 || colValue > max_value || rowValue <= 0 || rowValue > max_value || number <= 0 || number > max_value) {
 			printf("Invalid input.\n");
 			continue;
 		}
