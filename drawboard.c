@@ -13,7 +13,7 @@
 #define LETTER_0 '0'
 #define COL_PADDING 1
 
-static void clearScreen() {
+void clearScreen() {
 	system("cls");
 }
 
@@ -44,9 +44,6 @@ static void printLetterRow() {
 }
 
 void drawSudokuBoard(SudokuBoard* board) {
-	// Clear the screen
-	clearScreen();
-
 	// Print column letters
 	printLetterRow();
 
@@ -77,5 +74,17 @@ void drawSudokuBoard(SudokuBoard* board) {
 		if ((row_i+1) % 3 == 0) {
 			printRowLine();
 		}
+	}
+}
+
+/**
+ * Just simply outputs each row on its own line
+ */
+void drawSudokuBoardSimple(SudokuBoard* board) {
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		for (int j = 0; j < BOARD_SIZE; j++) {
+			printf("%d", board->tiles[i][j]);
+		}
+		printf("\n");
 	}
 }

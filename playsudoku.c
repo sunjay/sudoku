@@ -22,6 +22,8 @@ int main(int argc, char* argv[]) {
 
 	unsigned short move_col, move_row, value;
 	while (true) {
+		// Clear the screen
+		clearScreen();
 		drawSudokuBoard(board);
 		printf("\nEnter your move with the location, then the number to input: (e.g. A11)\n");
 		getMove(&move_col, &move_row, &value);

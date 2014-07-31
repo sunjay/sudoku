@@ -19,7 +19,8 @@ int main(int argc, char* argv[]) {
 		if (board == NULL) {
 			break;
 		}
-		drawSudokuBoard(board);
+		
+		drawSudokuBoardSimple(board);
 	}
 
 	return 0;
