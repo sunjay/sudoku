@@ -11,6 +11,7 @@ struct EmptyTile {
 
 static int count(short value, short items[], int length);
 static void sortEmptyTiles(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], int length);
+static void freeEmptyTileAvailableValues(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], int length);
 
 /**
  * Sudoku solving algorithm. Returns the solved board or NULL if something
@@ -109,6 +110,7 @@ SudokuBoard* solveBoard(SudokuBoard* board) {
 				if (solved != board) {
 					free(board);
 				}
+				freeEmptyTileAvailableValues(emptyTiles, empty_i);
 				return solved;
 			}
 
@@ -116,7 +118,14 @@ SudokuBoard* solveBoard(SudokuBoard* board) {
 		}
 	}
 
+	freeEmptyTileAvailableValues(emptyTiles, empty_i);
 	return NULL;
+}
+
+static void freeEmptyTileAvailableValues(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], int length) {
+	for (int i = 0; i < length; i++) {
+		free(emptyTiles[i].available_values);
+	}
 }
 
 static int count(short value, short items[], int length) {
