@@ -40,6 +40,7 @@ SudokuBoard* copySudokuBoard(SudokuBoard* board) {
 	}
 
 	for (int i = 0; i < BOARD_SIZE; i++) {
+		copy->tiles[i] = malloc(sizeof(short) * BOARD_SIZE);
 		for (int j = 0; j < BOARD_SIZE; j++) {
 			copy->tiles[i][j] = board->tiles[i][j];
 		}

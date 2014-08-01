@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "sudoku.h"
@@ -38,7 +37,7 @@ SudokuBoard* solveBoard(SudokuBoard* board) {
 				// empty tile
 				short* available_values = getTileSurroundings(board, col_i, row_i);
 				int available_count = count(0, available_values, BOARD_SIZE);
-				if (available_count > 1) {
+				if (available_count != 1) {
 					// Save the empty tile for further propagation
 					struct EmptyTile tile;
 					tile.row = row_i;
@@ -63,7 +62,6 @@ SudokuBoard* solveBoard(SudokuBoard* board) {
 				row[col_i] = only_value;
 			}
 		}
-
 		if (!foundValue) {
 			break;
 		}
@@ -80,12 +78,38 @@ SudokuBoard* solveBoard(SudokuBoard* board) {
 	}
 
 	sortEmptyTiles(emptyTiles, empty_i);
+
+	struct EmptyTile tile;
 	for (int i = 0; i < empty_i; i++) {
-		struct EmptyTile tile = emptyTiles[i];
-		printf("%d %d %d\n", tile.col, tile.row, tile.available_count);
+		tile = emptyTiles[i];
+
+		short* available_values = tile.available_values;
+		for (int j = 0; j < BOARD_SIZE; j++) {
+			// by convention, zero means that this value is available and valid
+			// for this tile
+			if (available_values[j] != 0) {
+				continue; // invalid value
+			}
+			// the value at this index is to be used as the guess
+			short guess = j + 1;
+
+			// retrieve a copy of a board
+			SudokuBoard* copy = copySudokuBoard(board);
+
+			// Make a guess
+			copy->tiles[tile.row][tile.col] = guess;
+
+			// Try to solve the board
+			SudokuBoard* solved = solveBoard(copy);
+
+			// If there's a solution, return it
+			if (solved != NULL) {
+				return solved;
+			}
+		}
 	}
 
-	return board;
+	return NULL;
 }
 
 static int count(short value, short items[], int length) {
