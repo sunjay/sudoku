@@ -116,13 +116,18 @@ static void sortEmptyTiles(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], i
 		return;
 	}
 
+	int best_i, best_count, i, j;
+	struct EmptyTile tile;
+
 	// simple selection sort
-	for (int i = 0; i < length; i++) {
-		int best_i = 0;
-		for (int j = i+1; j < BOARD_SIZE*BOARD_SIZE; j++) {
-			struct EmptyTile tile = emptyTiles[j];
-			if (tile.available_count < emptyTiles[best_i].available_count) {
+	for (i = 0; i < length-1; i++) {
+		best_i = i;
+		best_count = emptyTiles[best_i].available_count;
+		for (j = i+1; j < length; j++) {
+			tile = emptyTiles[j];
+			if (tile.available_count < best_count) {
 				best_i = j;
+				best_count = emptyTiles[best_i].available_count;
 			}
 		}
 		if (i != best_i) {
