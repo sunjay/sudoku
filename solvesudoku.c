@@ -29,6 +29,11 @@ int main(int argc, char* argv[]) {
 			continue;
 		}
 		drawSudokuBoardSimple(solved);
+
+		if (solved != board) {
+			free(solved);
+		}
+		free(board);
 	}
 
 	return 0;

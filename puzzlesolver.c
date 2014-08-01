@@ -60,6 +60,8 @@ SudokuBoard* solveBoard(SudokuBoard* board) {
 
 				foundValue = true;
 				row[col_i] = only_value;
+
+				free(available_values);
 			}
 		}
 		if (!foundValue) {
@@ -102,10 +104,16 @@ SudokuBoard* solveBoard(SudokuBoard* board) {
 			// Try to solve the board
 			SudokuBoard* solved = solveBoard(copy);
 
+			if (solved != board) {
+				free(board);
+			}
+
 			// If there's a solution, return it
 			if (solved != NULL) {
 				return solved;
 			}
+
+			free(solved);
 		}
 	}
 
