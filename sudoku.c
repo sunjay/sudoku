@@ -3,7 +3,6 @@
  *
  * Author: Sunjay Varma (www.sunjay.ca)
  */
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -104,7 +103,15 @@ void setBoardRow(SudokuBoard* board, int row_i, short items[]) {
  * Should be freed after use
  */
 short* getBoardRow(SudokuBoard* board, int row_i) {
-	return board->tiles[row_i];
+	short* row = malloc(sizeof(short)*BOARD_SIZE);
+	if (!row) {
+		return NULL;
+	}
+
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		row[i] = board->tiles[row_i][i];
+	}
+	return row;
 }
 
 /**
@@ -153,6 +160,16 @@ short** getBoardBox(SudokuBoard* board, int box_i) {
 }
 
 /**
+ * Frees a box from memory
+ */
+void freeBox(short** box) {
+	for (int i = 0; i < BOX_SIZE; i++) {
+		free(box[i]);
+	}
+	free(box);
+}
+
+/**
  * Converts tile column/row position to box index
  */
 int coordinatesToBoxIndex(int col_i, int row_i) {
@@ -188,6 +205,9 @@ short* getTileSurroundings(SudokuBoard* board, int col_i, int row_i) {
 
 	short* numbers = calloc(BOARD_SIZE, sizeof(short));
 	if (!numbers) {
+		free(col);
+		free(row);
+		freeBox(box);
 		return NULL;
 	}
 
@@ -215,6 +235,10 @@ short* getTileSurroundings(SudokuBoard* board, int col_i, int row_i) {
 			numbers[value-1] = value;
 		}
 	}
+
+	free(col);
+	free(row);
+	freeBox(box);
 
 	return numbers;
 }
@@ -256,7 +280,13 @@ bool isValidTile(SudokuBoard* board, int col_i, int row_i) {
 		}
 	}
 
-	return isValid(row) && isValid(col) && isValid(box_values);
+	bool valid = isValid(row) && isValid(col) && isValid(box_values);
+
+	free(col);
+	free(row);
+	freeBox(box);
+
+	return valid;
 }
 
 /**
@@ -275,6 +305,7 @@ bool isValidBoard(SudokuBoard* board) {
 				box_values[i*BOX_SIZE + j] = box[i][j];
 			}
 		}
+		freeBox(box);
 
 		if (!isValid(box_values)) {
 			return false;
@@ -283,14 +314,20 @@ bool isValidBoard(SudokuBoard* board) {
 		// validate column
 		short* col = getBoardColumn(board, i);
 
-		if (!isValid(col)) {
+		bool colValid = isValid(col);
+		free(col);
+
+		if (!colValid) {
 			return false;
 		}
 
 		// validate row
 		short* row = getBoardRow(board, i);
 
-		if (!isValid(row)) {
+		bool rowValid = isValid(row);
+		free(row);
+
+		if (!rowValid) {
 			return false;
 		}
 	}

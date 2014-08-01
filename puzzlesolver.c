@@ -104,12 +104,11 @@ SudokuBoard* solveBoard(SudokuBoard* board) {
 			// Try to solve the board
 			SudokuBoard* solved = solveBoard(copy);
 
-			if (solved != board) {
-				free(board);
-			}
-
 			// If there's a solution, return it
 			if (solved != NULL) {
+				if (solved != board) {
+					free(board);
+				}
 				return solved;
 			}
 

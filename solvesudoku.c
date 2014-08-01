@@ -26,6 +26,10 @@ int main(int argc, char* argv[]) {
 
 		if (solved == NULL) {
 			printf("No solution.\n");
+			if (solved != board) {
+				free(solved);
+			}
+			free(board);
 			continue;
 		}
 		drawSudokuBoardSimple(solved);
