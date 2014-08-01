@@ -19,42 +19,48 @@ static void sortEmptyTiles(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], i
  */
 SudokuBoard* solveBoard(SudokuBoard* board) {
 	struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE];
-	int empty_i = 0;
+	int empty_i;
 	bool foundValue;
 	while (true) {
+		// These variables need to be inside the loop so that they
+		// reset every time the algorithm goes back through the entire
+		// board
+		empty_i = 0;
 		foundValue = false;
-		for (int i = 0; i < BOARD_SIZE; i++) {
-			for (int j = 0; j < BOARD_SIZE; j++) {
-				short value = board->tiles[i][j];
+		for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
+			short* row = board->tiles[row_i];
+			for (int col_i = 0; col_i < BOARD_SIZE; col_i++) {
+				short value = row[col_i];
 				if (value != 0) {
 					continue;
 				}
 
 				// empty tile
-				short* available_values = getTileSurroundings(board, j, i);
+				short* available_values = getTileSurroundings(board, col_i, row_i);
 				int available_count = count(0, available_values, BOARD_SIZE);
 				if (available_count > 1) {
 					// Save the empty tile for further propagation
 					struct EmptyTile tile;
-					tile.row = i;
-					tile.col = j;
+					tile.row = row_i;
+					tile.col = col_i;
 					tile.available_values = available_values;
 					tile.available_count = available_count;
 					emptyTiles[empty_i++] = tile;
+
 					continue; // more than one possible value to place here
 				}
 
 				// The only possible value
 				short only_value = 0;
-				for (int i = 0; i < BOARD_SIZE; i++) {
-					if (available_values[i] == 0) {
-						only_value = i + 1;
+				for (int k = 0; k < BOARD_SIZE; k++) {
+					if (available_values[k] == 0) {
+						only_value = k + 1;
 						break;
 					}
 				}
 
 				foundValue = true;
-				board->tiles[i][j] = only_value;
+				row[col_i] = only_value;
 			}
 		}
 
@@ -72,6 +78,7 @@ SudokuBoard* solveBoard(SudokuBoard* board) {
 		// no empty tiles
 		return NULL;
 	}
+
 	sortEmptyTiles(emptyTiles, empty_i);
 	for (int i = 0; i < empty_i; i++) {
 		struct EmptyTile tile = emptyTiles[i];
