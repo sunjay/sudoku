@@ -3,24 +3,10 @@
 
 #include "sudoku.h"
 
-struct EmptyTile {
-	int row;
-	int col;
-	short* available_values;
-	int available_count;
-};
-
-struct EmptyTilesArray {
-	struct EmptyTile tiles[BOARD_SIZE*BOARD_SIZE];
-	int length;
-};
-
 static int count(short value, short items[], int length);
-static void sortEmptyTiles(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], int length);
-static void freeEmptyTileAvailableValues(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], int length);
-static struct EmptyTilesArray* simpleSolver(SudokuBoard* board);
-static struct EmptyTilesArray* smartSolver(SudokuBoard* board, struct EmptyTilesArray* emptyTilesManager);
-static SudokuBoard* guessSolver(SudokuBoard* board, struct EmptyTilesArray* emptyTilesManager);
+static void simpleSolver(SudokuBoard* board);
+static void smartSolver(SudokuBoard* board);
+static SudokuBoard* guessSolver(SudokuBoard* board);
 
 /**
  * Sudoku solving algorithm. Returns the solved board or NULL if something
@@ -28,27 +14,21 @@ static SudokuBoard* guessSolver(SudokuBoard* board, struct EmptyTilesArray* empt
  */
 SudokuBoard* solveBoard(SudokuBoard* board) {
 	// First algorithm
-	struct EmptyTilesArray* emptyTilesManager = simpleSolver(board);
-	if (emptyTilesManager == NULL) {
-		return NULL;
-	}
+	simpleSolver(board);
 
 	if (isCompleteBoard(board)) {
 		return board;
 	}
 
 	// Second algorithm
-	emptyTilesManager = smartSolver(board, emptyTilesManager);
-	if (emptyTilesManager == NULL) {
-		return NULL;
-	}
+	smartSolver(board);
 
 	if (isCompleteBoard(board)) {
 		return board;
 	}
 
 	// Last resort brute-force guess
-	return guessSolver(board, emptyTilesManager);
+	return guessSolver(board);
 }
 
 /**
@@ -62,19 +42,12 @@ SudokuBoard* solveBoard(SudokuBoard* board) {
  *
  * Modifies the board in place.
  */
-static struct EmptyTilesArray* simpleSolver(SudokuBoard* board) {
-	struct EmptyTilesArray* emptyTilesManager = malloc(sizeof(struct EmptyTilesArray));
-	if (!emptyTilesManager) {
-		return NULL;
-	}
-
-	int empty_i;
+static void simpleSolver(SudokuBoard* board) {
 	bool foundValue;
 	while (true) {
 		// These variables need to be inside the loop so that they
 		// reset every time the algorithm goes back through the entire
 		// board
-		empty_i = 0;
 		foundValue = false;
 		for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
 			short* row = board->tiles[row_i];
@@ -88,14 +61,7 @@ static struct EmptyTilesArray* simpleSolver(SudokuBoard* board) {
 				short* available_values = getTileSurroundings(board, col_i, row_i);
 				int available_count = count(0, available_values, BOARD_SIZE);
 				if (available_count != 1) {
-					// Save the empty tile for further propagation
-					struct EmptyTile tile;
-					tile.row = row_i;
-					tile.col = col_i;
-					tile.available_values = available_values;
-					tile.available_count = available_count;
-					emptyTilesManager->tiles[empty_i++] = tile;
-
+					free(available_values);
 					continue; // more than one possible value to place here
 				}
 
@@ -118,9 +84,6 @@ static struct EmptyTilesArray* simpleSolver(SudokuBoard* board) {
 			break;
 		}
 	}
-
-	emptyTilesManager->length = empty_i;
-	return emptyTilesManager;
 }
 
 /**
@@ -130,112 +93,75 @@ static struct EmptyTilesArray* simpleSolver(SudokuBoard* board) {
  * This algoirthm uses the surrounding tiles instead of just the ones
  * in the same row.
  */
-static struct EmptyTilesArray* smartSolver(SudokuBoard* board, struct EmptyTilesArray* initialEmptyTiles) {
-	struct EmptyTilesArray* emptyTilesManager = malloc(sizeof(struct EmptyTilesArray));
-	if (!emptyTilesManager) {
-		return NULL;
-	}
+static void smartSolver(SudokuBoard* board) {
+	for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
+		for (int col_i = 0; col_i < BOARD_SIZE; col_i++) {
+			short value = board->tiles[row_i][col_i];
+			if (value != 0) {
+				continue; // tile is already filled, move on
+			}
 
-	struct EmptyTile* emptyTiles = initialEmptyTiles->tiles;
-	int num_empty_tiles = initialEmptyTiles->length;
-
-	int empty_i = 0;
-	// go through empty tiles
-	for (int i = 0; i < num_empty_tiles; i++) {
-		struct EmptyTile emptyTile = emptyTiles[i];
-
-		// Uses the surrounding rows and columns (in the same box) to
-		// narrow down what this empty tile could be
-		int box_start_row = (emptyTile.row / BOX_SIZE) * BOX_SIZE;
-		int box_start_col = (emptyTile.col / BOX_SIZE) * BOX_SIZE;
-
-		// Go through each possible value
-		for (int value = 1; value <= BOARD_SIZE; value++) {
-			;
+			// Must be dealing with an empty tile
+			short* available_values = getTileSurroundings(board, col_i, row_i);
+			free(available_values);
 		}
-
-		// If this tile could not be filled, save it in the new empty tile manager
-		emptyTilesManager->tiles[empty_i++] = emptyTile;
 	}
-
-	emptyTilesManager->length = empty_i;
-	return emptyTilesManager;
 }
 
 /**
  * Attempts to guess on each empty tile based on the values available
  */
-static SudokuBoard* guessSolver(SudokuBoard* board, struct EmptyTilesArray* emptyTilesManager) {
-	struct EmptyTile* emptyTiles = emptyTilesManager->tiles;
-	int num_empty_tiles = emptyTilesManager->length;
-
-	// go through remaining emptyTiles and make guesses
-	if (num_empty_tiles == 0) {
-		// no empty tiles and no solution
-		return NULL;
-	}
-
-	sortEmptyTiles(emptyTiles, num_empty_tiles);
-
-	struct EmptyTile tile;
-	for (int i = 0; i < num_empty_tiles; i++) {
-		tile = emptyTiles[i];
-
-		short* available_values = tile.available_values;
-		for (int j = 0; j < BOARD_SIZE; j++) {
-			// by convention, zero means that this value is available and valid
-			// for this tile
-			if (available_values[j] != 0) {
-				continue; // invalid value
+static SudokuBoard* guessSolver(SudokuBoard* board) {
+	for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
+		for (int col_i = 0; col_i < BOARD_SIZE; col_i++) {
+			short value = board->tiles[row_i][col_i];
+			if (value != 0) {
+				continue; // tile is already filled, move on
 			}
-			// the value at this index is to be used as the guess
-			short guess = j + 1;
 
-			// retrieve a copy of a board
-			SudokuBoard* copy = copySudokuBoard(board);
-
-			// Make a guess
-			copy->tiles[tile.row][tile.col] = guess;
-
-			system("cls");
-			printf("Guessing %d at (%d, %d) Empty: %2d ", guess, tile.col, tile.row, num_empty_tiles);
-			for (int o = 0; o < num_empty_tiles; o++) {
-				printf("X");
-			}
-			printf("\n");
-			for (int q = 0; q < BOARD_SIZE; q++) {
-				for (int t = 0; t < BOARD_SIZE; t++) {
-					printf("%d", copy->tiles[q][t]);
+			short* available_values = getTileSurroundings(board, col_i, row_i);
+			// Go through all available values
+			for (int j = 0; j < BOARD_SIZE; j++) {
+				// by convention, zero means that this value is available and valid
+				// for this tile
+				if (available_values[j] != 0) {
+					continue; // invalid value
 				}
-				printf("\n");
-			}
+				// the value at this index is to be used as the guess
+				short guess = j + 1;
 
-			// Try to solve the board
-			SudokuBoard* solved = solveBoard(copy);
+				// retrieve a copy of a board
+				SudokuBoard* copy = copySudokuBoard(board);
 
-			// If there's a solution, return it
-			if (solved != NULL) {
-				if (solved != board) {
-					free(board);
+				// Make a guess
+				copy->tiles[row_i][col_i] = guess;
+
+				system("cls");
+				printf("Guessing %d at (%d, %d)\n", guess, col_i, row_i);
+				for (int q = 0; q < BOARD_SIZE; q++) {
+					for (int t = 0; t < BOARD_SIZE; t++) {
+						printf("%d", copy->tiles[q][t]);
+					}
+					printf("\n");
 				}
-				freeEmptyTileAvailableValues(emptyTiles, num_empty_tiles);
-				free(emptyTilesManager);
-				return solved;
-			}
 
-			free(solved);
+				// Try to solve the board
+				SudokuBoard* solved = solveBoard(copy);
+
+				// If there's a solution, return it
+				if (solved != NULL) {
+					if (solved != copy) {
+						free(copy);
+					}
+					free(solved);
+					return solved;
+				}
+
+				free(copy);
+			}
 		}
 	}
-
-	freeEmptyTileAvailableValues(emptyTiles, num_empty_tiles);
-	free(emptyTilesManager);
 	return NULL;
-}
-
-static void freeEmptyTileAvailableValues(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], int length) {
-	for (int i = 0; i < length; i++) {
-		free(emptyTiles[i].available_values);
-	}
 }
 
 static int count(short value, short items[], int length) {
@@ -251,17 +177,17 @@ static int count(short value, short items[], int length) {
 /**
  * Swaps a and b
  */
-static void swapEmptyTiles(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], int a, int b) {
+/*static void swapEmptyTiles(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], int a, int b) {
 	struct EmptyTile temp = emptyTiles[a];
 	emptyTiles[a] = emptyTiles[b];
 	emptyTiles[b] = temp;
-}
+}*/
 
 /**
  * Sort the empty tiles so that the ones with the smallest number of available
  * possibilities are first.
  */
-static void sortEmptyTiles(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], int length) {
+/*static void sortEmptyTiles(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], int length) {
 	if (length == 0) {
 		return;
 	}
@@ -285,3 +211,4 @@ static void sortEmptyTiles(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], i
 		}
 	}
 }
+*/
