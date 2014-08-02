@@ -8,6 +8,9 @@ playsudoku : $(OBJECTS) playsudoku.o
 solvesudoku : $(OBJECTS) solvesudoku.o puzzlesolver.o boardparser.o
 	$(CC) $(CFLAGS) solvesudoku.o puzzlesolver.o boardparser.o $(OBJECTS) -o solvesudoku
 
+formatsudoku : $(OBJECTS) formatsudoku.o boardparser.o
+	$(CC) $(CFLAGS) formatsudoku.o boardparser.o $(OBJECTS) -o formatsudoku
+
 madness : madness.o
 	$(CC) $(CFLAGS) madness.o -o madness
 
