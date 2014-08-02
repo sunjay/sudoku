@@ -1,6 +1,8 @@
 # PyCharm
 .idea/
-sudoku-Euler-96.txt
+
+# sample puzzles
+samples/
 
 # Object files
 *.o
