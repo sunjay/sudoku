@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "sudoku.h"
@@ -9,16 +10,122 @@ struct EmptyTile {
 	int available_count;
 };
 
+struct EmptyTilesArray {
+	struct EmptyTile tiles[BOARD_SIZE*BOARD_SIZE];
+	int length;
+};
+
 static int count(short value, short items[], int length);
 static void sortEmptyTiles(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], int length);
 static void freeEmptyTileAvailableValues(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], int length);
+static struct EmptyTilesArray* simpleSolver(SudokuBoard* board);
+static struct EmptyTilesArray* smartSolver(SudokuBoard* board, struct EmptyTilesArray* emptyTilesManager);
 
 /**
  * Sudoku solving algorithm. Returns the solved board or NULL if something
  * went horribly wrong.
  */
 SudokuBoard* solveBoard(SudokuBoard* board) {
-	struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE];
+	// First algorithm
+	struct EmptyTilesArray* emptyTilesManager = simpleSolver(board);
+	if (emptyTilesManager == NULL) {
+		return NULL;
+	}
+
+	if (isCompleteBoard(board)) {
+		return board;
+	}
+
+	// Second algorithm
+	emptyTilesManager = smartSolver(board, emptyTilesManager);
+
+	if (isCompleteBoard(board)) {
+		return board;
+	}
+
+	struct EmptyTile* emptyTiles = emptyTilesManager->tiles;
+	int num_empty_tiles = emptyTilesManager->length;
+
+	// go through remaining emptyTiles and make guesses
+	if (num_empty_tiles == 0) {
+		// no empty tiles and no solution
+		return NULL;
+	}
+
+	sortEmptyTiles(emptyTiles, num_empty_tiles);
+
+	struct EmptyTile tile;
+	for (int i = 0; i < num_empty_tiles; i++) {
+		tile = emptyTiles[i];
+
+		short* available_values = tile.available_values;
+		for (int j = 0; j < BOARD_SIZE; j++) {
+			// by convention, zero means that this value is available and valid
+			// for this tile
+			if (available_values[j] != 0) {
+				continue; // invalid value
+			}
+			// the value at this index is to be used as the guess
+			short guess = j + 1;
+
+			// retrieve a copy of a board
+			SudokuBoard* copy = copySudokuBoard(board);
+
+			// Make a guess
+			copy->tiles[tile.row][tile.col] = guess;
+
+			system("cls");
+			printf("Guessing %d at (%d, %d) Empty: %2d ", guess, tile.col, tile.row, num_empty_tiles);
+			for (int o = 0; o < num_empty_tiles; o++) {
+				printf("X");
+			}
+			printf("\n");
+			for (int q = 0; q < BOARD_SIZE; q++) {
+				for (int t = 0; t < BOARD_SIZE; t++) {
+					printf("%d", copy->tiles[q][t]);
+				}
+				printf("\n");
+			}
+
+			// Try to solve the board
+			SudokuBoard* solved = solveBoard(copy);
+
+			// If there's a solution, return it
+			if (solved != NULL) {
+				if (solved != board) {
+					free(board);
+				}
+				freeEmptyTileAvailableValues(emptyTiles, num_empty_tiles);
+				free(emptyTilesManager);
+				return solved;
+			}
+
+			free(solved);
+		}
+	}
+
+	freeEmptyTileAvailableValues(emptyTiles, num_empty_tiles);
+	free(emptyTilesManager);
+	return NULL;
+}
+
+/**
+ * The first tier and simplest solving algorithm.
+ *
+ * This algorithm goes through all empty tiles and checks what values
+ * are available/valid for each tile. If there is only one possibility, that
+ * is placed on that space.
+ *
+ * Solves as much as possible. Complete solution not guaranteed.
+ *
+ * Modifies the board in place.
+ */
+static struct EmptyTilesArray* simpleSolver(SudokuBoard* board) {
+	struct EmptyTilesArray* emptyTilesManager = malloc(sizeof(struct EmptyTilesArray));
+	if (!emptyTilesManager) {
+		return NULL;
+	}
+
 	int empty_i;
 	bool foundValue;
 	while (true) {
@@ -31,11 +138,11 @@ SudokuBoard* solveBoard(SudokuBoard* board) {
 			short* row = board->tiles[row_i];
 			for (int col_i = 0; col_i < BOARD_SIZE; col_i++) {
 				short value = row[col_i];
+				// Is this an empty tile?
 				if (value != 0) {
 					continue;
 				}
 
-				// empty tile
 				short* available_values = getTileSurroundings(board, col_i, row_i);
 				int available_count = count(0, available_values, BOARD_SIZE);
 				if (available_count != 1) {
@@ -45,7 +152,7 @@ SudokuBoard* solveBoard(SudokuBoard* board) {
 					tile.col = col_i;
 					tile.available_values = available_values;
 					tile.available_count = available_count;
-					emptyTiles[empty_i++] = tile;
+					emptyTilesManager->tiles[empty_i++] = tile;
 
 					continue; // more than one possible value to place here
 				}
@@ -70,56 +177,19 @@ SudokuBoard* solveBoard(SudokuBoard* board) {
 		}
 	}
 
-	if (isCompleteBoard(board)) {
-		return board;
-	}
+	emptyTilesManager->length = empty_i;
+	return emptyTilesManager;
+}
 
-	// go through remaining emptyTiles and make guesses
-	if (empty_i == 0) {
-		// no empty tiles
-		return NULL;
-	}
-
-	sortEmptyTiles(emptyTiles, empty_i);
-
-	struct EmptyTile tile;
-	for (int i = 0; i < empty_i; i++) {
-		tile = emptyTiles[i];
-
-		short* available_values = tile.available_values;
-		for (int j = 0; j < BOARD_SIZE; j++) {
-			// by convention, zero means that this value is available and valid
-			// for this tile
-			if (available_values[j] != 0) {
-				continue; // invalid value
-			}
-			// the value at this index is to be used as the guess
-			short guess = j + 1;
-
-			// retrieve a copy of a board
-			SudokuBoard* copy = copySudokuBoard(board);
-
-			// Make a guess
-			copy->tiles[tile.row][tile.col] = guess;
-
-			// Try to solve the board
-			SudokuBoard* solved = solveBoard(copy);
-
-			// If there's a solution, return it
-			if (solved != NULL) {
-				if (solved != board) {
-					free(board);
-				}
-				freeEmptyTileAvailableValues(emptyTiles, empty_i);
-				return solved;
-			}
-
-			free(solved);
-		}
-	}
-
-	freeEmptyTileAvailableValues(emptyTiles, empty_i);
-	return NULL;
+/**
+ * Attempts to solve the board based on patterns. Only makes complete
+ * 100% confidence choices. (No guesses)
+ *
+ * This algoirthm uses the surrounding tiles instead of just the ones
+ * in the same row.
+ */
+static struct EmptyTilesArray* smartSolver(SudokuBoard* board, struct EmptyTilesArray* emptyTilesManager) {
+	return emptyTilesManager;
 }
 
 static void freeEmptyTileAvailableValues(struct EmptyTile emptyTiles[BOARD_SIZE*BOARD_SIZE], int length) {
