@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
 		SudokuBoard* solved = solveBoard(board);
 
 		if (solved == NULL) {
-			printf("No solution.\n");
+			printf("No solution found.\n");
 			if (solved != board) {
 				free(solved);
 			}

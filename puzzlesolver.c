@@ -9,8 +9,8 @@ static void smartSolver(SudokuBoard* board);
 static SudokuBoard* guessSolver(SudokuBoard* board);
 
 /**
- * Sudoku solving algorithm. Returns the solved board or NULL if something
- * went horribly wrong.
+ * Sudoku solving algorithm. Returns the solved board or NULL if for some
+ * reason the board could not be solved.
  */
 SudokuBoard* solveBoard(SudokuBoard* board) {
 	// First algorithm
@@ -110,6 +110,10 @@ static void smartSolver(SudokuBoard* board) {
 
 /**
  * Attempts to guess on each empty tile based on the values available
+ *
+ * This is the brute force method. So it should (in time) return the
+ * correct board. If the correct solution could still not be found,
+ * returns NULL.
  */
 static SudokuBoard* guessSolver(SudokuBoard* board) {
 	for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
