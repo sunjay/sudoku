@@ -192,9 +192,8 @@ short** getTileBox(SudokuBoard* board, int col_i, int row_i) {
  * Gets a sorted index of all unique numbers surrounding a tile index.
  *
  * Collects numbers in the same box, column and row
- * Returns an array of BOARD_SIZE items. If a number exists arround the
+ * Returns an array of BOARD_SIZE items. If a number exists around the
  * tile, it will be in the array as is. Otherwise, it will be zero.
- * Returns NULL if the box, row and column of the given tile are empty
  *
  * Should be freed after use
  */

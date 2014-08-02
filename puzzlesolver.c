@@ -103,7 +103,23 @@ static void smartSolver(SudokuBoard* board) {
 			}
 
 			// Must be dealing with an empty tile
+
+			// Go through all possible values that can be validly placed on this tile
 			short* available_values = getTileSurroundings(board, col_i, row_i);
+			for (int i = 0; i < BOARD_SIZE; i++) {
+				// By convention, if this spot in the available_tiles is zero,
+				// the corresponding number (based on the index) is no where in
+				// the box, row or column surrounding this tile
+				if (available_values[i] != 0) {
+					continue; // skip values that already exist in the vicinity
+				}
+
+				// The value that corresponds to this index
+				short value = i + 1;
+
+				//TODO
+			}
+
 			free(available_values);
 		}
 	}
@@ -128,11 +144,13 @@ static SudokuBoard* guessSolver(SudokuBoard* board) {
 			short* available_values = getTileSurroundings(board, col_i, row_i);
 			// Go through all available values
 			for (int j = 0; j < BOARD_SIZE; j++) {
-				// by convention, zero means that this value is available and valid
-				// for this tile
+				// By convention, if this spot in the available_tiles is zero,
+				// the corresponding number (based on the index) is no where in
+				// the box, row or column surrounding this tile
 				if (available_values[j] != 0) {
-					continue; // invalid value
+					continue; // skip values that already exist in the vicinity
 				}
+
 				// the value at this index is to be used as the guess
 				short guess = j + 1;
 
