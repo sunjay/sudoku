@@ -32,9 +32,6 @@ int main(int argc, char* argv[]) {
 
 		if (solved == NULL) {
 			printf("No solution found.\n");
-			if (solved != board) {
-				free(solved);
-			}
 			free(board);
 			continue;
 		}
