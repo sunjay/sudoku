@@ -87,8 +87,9 @@ static void simpleSolver(SudokuBoard* board) {
 }
 
 /**
- * Attempts to solve the board based on patterns. Only makes complete
- * 100% confidence choices. (No guesses)
+ * Attempts to solve the board based on the surrounding rows and columns
+ * (in the same box). Only makes complete 100% confidence
+ * choices. (No guesses)
  *
  * This algoirthm uses the surrounding tiles instead of just the ones
  * in the same row.
@@ -113,7 +114,8 @@ static void smartSolver(SudokuBoard* board) {
  *
  * This is the brute force method. So it should (in time) return the
  * correct board. If the correct solution could still not be found,
- * returns NULL.
+ * returns NULL. That happens if all guesses were exhausted and still
+ * no sure solution could be determined. Some solutions just don't work.
  */
 static SudokuBoard* guessSolver(SudokuBoard* board) {
 	for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
