@@ -89,6 +89,24 @@ static void simpleSolver(SudokuBoard* board) {
 }
 
 /**
+ * Searches the box on the board starting at box_start_row, excluding exclude_row.
+ * Returns the number of occurrences of value found in each of those rows.
+ * Returns an integer up to BOX_SIZE-1.
+ */
+static int searchOtherRows(SudokuBoard* board, int box_start_row, short value, int exclude_row) {
+	return 0;
+}
+
+/**
+ * Searches the box on the board starting at box_start_col, excluding exclude_col.
+ * Returns the number of occurrences of value found in each of those columns.
+ * Returns an integer up to BOX_SIZE-1.
+ */
+static int searchOtherColumns(SudokuBoard* board, int box_start_col, short value, int exclude_col) {
+	return 0;
+}
+
+/**
  * Finds the solution to the given tile by narrowing it down from all possible
  * values for this position. Does so by checking the surrounding rows and columns
  * (still in the same box).
@@ -99,7 +117,12 @@ static void simpleSolver(SudokuBoard* board) {
  * Returns the found value if any, or zero if no perfect value is found.
  */
 static short narrowSolveTile(SudokuBoard* board, int col_i, int row_i) {
-	short result = 0;
+	short results[BOARD_SIZE];
+	int results_found = 0;
+
+	// The start column and row of the box that this position is contained in
+	int box_start_col = (col_i / BOX_SIZE) * BOX_SIZE;
+	int box_start_row = (row_i / BOX_SIZE) * BOX_SIZE;
 
 	// Go through all possible values that can be validly placed on this tile
 	short* available_values = getTileSurroundings(board, col_i, row_i);
@@ -111,13 +134,30 @@ static short narrowSolveTile(SudokuBoard* board, int col_i, int row_i) {
 			continue; // skip values that already exist in the vicinity
 		}
 
-		// The value that corresponds to this index
+		// The value that corresponds to this index in available values
 		short value = i + 1;
-		value += 1;
+
+		// Check if this value exists in the *other* box rows and columns
+
+		// Number of tiles that value showed up in other rows
+		int other_rows = searchOtherRows(board, box_start_row, value, row_i);
+		// Number of tiles that value showed up in other columns
+		int other_cols = searchOtherColumns(board, box_start_col, value, col_i);
+
+		if (other_rows == BOX_SIZE-1 && other_cols == BOX_SIZE-1) {
+			// Valid value for this tile. Store it.
+			results[results_found++] = value;
+			break;
+		}
 	}
 
 	free(available_values);
-	return result;
+
+	// If only one result was found, it must be the only option
+	if (results_found == 1) {
+		return results[0];
+	}
+	return 0; // Either no results or too many
 }
 
 /**
