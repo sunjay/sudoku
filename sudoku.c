@@ -48,6 +48,16 @@ SudokuBoard* copySudokuBoard(SudokuBoard* board) {
 }
 
 /**
+ * Frees a board from memory
+ */
+void freeSudokuBoard(SudokuBoard* board) {
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		free(board->tiles[i]);
+	}
+	free(board);
+}
+
+/**
  * Generates a valid, completely filled, pre-solved, random board
  *
  * Currently only supports b

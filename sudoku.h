@@ -15,6 +15,10 @@ typedef struct {
 SudokuBoard* newSudokuBoard();
 SudokuBoard* solvedSudokuBoard();
 
+// Board deletion
+void freeSudokuBoard(SudokuBoard* board);
+void freeBox(short** box);
+
 // Board retrieval methods
 short* getBoardRow(SudokuBoard* board, int row_i);
 short* getBoardColumn(SudokuBoard* board, int col_i);

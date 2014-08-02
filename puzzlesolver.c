@@ -130,18 +130,19 @@ static SudokuBoard* guessSolver(SudokuBoard* board) {
 
 		// Try to solve the board with this guess
 		SudokuBoard* solved = solveBoard(copy);
+		if (solved != copy) {
+			freeSudokuBoard(copy);
+		}
 
 		// If there's a solution, return it
 		if (solved != NULL) {
-			if (solved != copy) {
-				free(copy);
-			}
+			free(minTile->available_values);
+			free(minTile);
 			return solved;
 		}
-
-		free(copy);
 	}
 
+	free(minTile->available_values);
 	free(minTile);
 	return NULL;
 }

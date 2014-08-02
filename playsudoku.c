@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
 		break;
 	}
 
-	free(board);
+	freeSudokuBoard(board);
 	return 0;
 }
 

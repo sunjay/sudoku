@@ -33,9 +33,9 @@ SudokuBoard* readBoard() {
 			row[found++] = c - LETTER_0;
 		}
 
+		free(line);
 		if (found != BOARD_SIZE) {
 			printf("invalid row size");
-			free(line);
 			return NULL;
 		}
 

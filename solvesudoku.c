@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
 
 		if (!isValidBoard(board)) {
 			printf("Invalid board.\n");
-			free(board);
+			freeSudokuBoard(board);
 			continue;
 		}
 
@@ -32,15 +32,15 @@ int main(int argc, char* argv[]) {
 
 		if (solved == NULL) {
 			printf("No solution found.\n");
-			free(board);
+			freeSudokuBoard(board);
 			continue;
 		}
 		drawSudokuBoardSimple(solved);
 
 		if (solved != board) {
-			free(solved);
+			freeSudokuBoard(solved);
 		}
-		free(board);
+		freeSudokuBoard(board);
 	}
 
 	return 0;
