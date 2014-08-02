@@ -39,7 +39,7 @@ void getMove(unsigned short* col, unsigned short* row, unsigned short* value) {
 	char colLetter;
 	int max_value = BOARD_SIZE;
 	while (true) {
-		char* line = getline();
+		char* line = getline(stdin);
 		if (line == NULL) { // EOF
 			exit(0);
 		}

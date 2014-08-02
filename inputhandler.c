@@ -6,7 +6,7 @@
 
 #define CHUNK_SIZE 64
 
-char* getline() {
+char* getline(FILE* fp) {
 	// read until the end of line or end of file
 	char c;
 	char* line = malloc(sizeof(char)*CHUNK_SIZE);
@@ -14,7 +14,7 @@ char* getline() {
 	int i = 0;
 	int size = CHUNK_SIZE;
 	while (true) {
-		c = getchar();
+		c = getc(fp);
 		if (c == EOF) {
 			return NULL;
 		}

@@ -16,7 +16,7 @@
 
 int main(int argc, char* argv[]) {
 	while (true) {
-		SudokuBoard* board = readBoard();
+		SudokuBoard* board = readBoard(stdin);
 		if (board == NULL) {
 			break;
 		}

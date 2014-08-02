@@ -8,13 +8,13 @@
 
 #define LETTER_0 '0'
 
-SudokuBoard* readBoard() {
+SudokuBoard* readBoard(FILE* fp) {
 	SudokuBoard* board = newSudokuBoard();
 
 	int row_i = 0;
 	char* line;
 	while (true) {
-		line = getline();
+		line = getline(fp);
 		if (line == NULL) { // EOF + Not enough rows given
 			return NULL;
 		}
