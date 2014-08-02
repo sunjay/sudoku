@@ -39,6 +39,9 @@ SudokuBoard* solveBoard(SudokuBoard* board) {
 
 	// Second algorithm
 	emptyTilesManager = smartSolver(board, emptyTilesManager);
+	if (emptyTilesManager == NULL) {
+		return NULL;
+	}
 
 	if (isCompleteBoard(board)) {
 		return board;
@@ -127,7 +130,35 @@ static struct EmptyTilesArray* simpleSolver(SudokuBoard* board) {
  * This algoirthm uses the surrounding tiles instead of just the ones
  * in the same row.
  */
-static struct EmptyTilesArray* smartSolver(SudokuBoard* board, struct EmptyTilesArray* emptyTilesManager) {
+static struct EmptyTilesArray* smartSolver(SudokuBoard* board, struct EmptyTilesArray* initialEmptyTiles) {
+	struct EmptyTilesArray* emptyTilesManager = malloc(sizeof(struct EmptyTilesArray));
+	if (!emptyTilesManager) {
+		return NULL;
+	}
+
+	struct EmptyTile* emptyTiles = initialEmptyTiles->tiles;
+	int num_empty_tiles = initialEmptyTiles->length;
+
+	int empty_i = 0;
+	// go through empty tiles
+	for (int i = 0; i < num_empty_tiles; i++) {
+		struct EmptyTile emptyTile = emptyTiles[i];
+
+		// Uses the surrounding rows and columns (in the same box) to
+		// narrow down what this empty tile could be
+		int box_start_row = (emptyTile.row / BOX_SIZE) * BOX_SIZE;
+		int box_start_col = (emptyTile.col / BOX_SIZE) * BOX_SIZE;
+
+		// Go through each possible value
+		for (int value = 1; value <= BOARD_SIZE; value++) {
+			;
+		}
+
+		// If this tile could not be filled, save it in the new empty tile manager
+		emptyTilesManager->tiles[empty_i++] = emptyTile;
+	}
+
+	emptyTilesManager->length = empty_i;
 	return emptyTilesManager;
 }
 

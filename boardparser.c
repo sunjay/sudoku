@@ -27,6 +27,7 @@ SudokuBoard* readBoard() {
 			}
 			if (!isdigit(c) || found > ((int)BOARD_SIZE)) {
 				printf("invalid row item");
+				free(line);
 				return NULL;
 			}
 			row[found++] = c - LETTER_0;
@@ -34,6 +35,7 @@ SudokuBoard* readBoard() {
 
 		if (found != BOARD_SIZE) {
 			printf("invalid row size");
+			free(line);
 			return NULL;
 		}
 
