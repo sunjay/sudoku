@@ -152,6 +152,9 @@ short** getBoardBox(SudokuBoard* board, int box_i) {
 	int x_offset = (box_i % ((int)BOX_SIZE)) * BOX_SIZE;
 	for (int i = 0; i < BOX_SIZE; i++) {
 		box[i] = malloc(sizeof(short)*BOX_SIZE);
+		if (!box[i]) {
+			return NULL; // yes this is a memory leak...
+		}
 		for (int j = 0; j < BOX_SIZE; j++) {
 			box[i][j] = board->tiles[y_offset + i][x_offset + j];
 		}
@@ -199,8 +202,20 @@ short** getTileBox(SudokuBoard* board, int col_i, int row_i) {
  */
 short* getTileSurroundings(SudokuBoard* board, int col_i, int row_i) {
 	short* col = getBoardColumn(board, col_i);
+	if (col == NULL) {
+		return NULL;
+	}
 	short* row = getBoardRow(board, row_i);
+	if (row == NULL) {
+		free(col);
+		return NULL;
+	}
 	short** box = getTileBox(board, col_i, row_i);
+	if (box == NULL) {
+		free(col);
+		free(row);
+		return NULL;
+	}
 
 	short* numbers = calloc(BOARD_SIZE, sizeof(short));
 	if (!numbers) {
