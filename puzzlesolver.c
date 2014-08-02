@@ -94,7 +94,26 @@ static void simpleSolver(SudokuBoard* board) {
  * Returns an integer up to BOX_SIZE-1.
  */
 static int searchOtherRows(SudokuBoard* board, int box_start_row, short value, int exclude_row) {
-	return 0;
+	int other_rows_found = 0;
+	for (int box_i = 0; box_i < BOX_SIZE; box_i++) {
+		int row_index = box_start_row + box_i;
+		if (row_index == exclude_row) {
+			continue;
+		}
+
+		short* row = getBoardRow(board, row_index);
+
+		// check if this row contains the value
+		for (int i = 0; i < BOARD_SIZE; i++) {
+			if (row[i] == value) {
+				other_rows_found++;
+				break;
+			}
+		}
+
+		free(row);
+	}
+	return other_rows_found;
 }
 
 /**
@@ -103,7 +122,26 @@ static int searchOtherRows(SudokuBoard* board, int box_start_row, short value, i
  * Returns an integer up to BOX_SIZE-1.
  */
 static int searchOtherColumns(SudokuBoard* board, int box_start_col, short value, int exclude_col) {
-	return 0;
+	int other_cols_found = 0;
+	for (int box_i = 0; box_i < BOX_SIZE; box_i++) {
+		int col_index = box_start_col + box_i;
+		if (col_index == exclude_col) {
+			continue;
+		}
+
+		short* col = getBoardColumn(board, col_index);
+
+		// check if this row contains the value
+		for (int i = 0; i < BOARD_SIZE; i++) {
+			if (col[i] == value) {
+				other_cols_found++;
+				break;
+			}
+		}
+
+		free(col);
+	}
+	return other_cols_found;
 }
 
 /**
