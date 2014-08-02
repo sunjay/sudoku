@@ -22,6 +22,12 @@ int main(int argc, char* argv[]) {
 			break;
 		}
 
+		if (!isValidBoard(board)) {
+			printf("Invalid board.\n");
+			free(board);
+			continue;
+		}
+
 		SudokuBoard* solved = solveBoard(board);
 
 		if (solved == NULL) {
