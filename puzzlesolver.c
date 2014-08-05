@@ -25,11 +25,7 @@ SudokuBoard* solveBoard(SudokuBoard* board) {
 	if (isCompleteBoard(board)) {
 		return board;
 	}
-
-	if (isCompleteBoard(board)) {
-		return board;
-	}
-
+	
 	// Last resort brute-force guess
 	return guessSolver(board);
 }
