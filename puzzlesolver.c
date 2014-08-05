@@ -2,13 +2,6 @@
 
 #include "sudoku.h"
 
-struct EmptyTile {
-	int row;
-	int col;
-	short* available_values;
-	int available_count;
-};
-
 static void simpleSolver(SudokuBoard* board);
 static SudokuBoard* guessSolver(SudokuBoard* board);
 static struct EmptyTile* minimumTile(SudokuBoard* board);
@@ -19,19 +12,15 @@ static int count(short value, short items[], int length);
  * reason the board could not be solved.
  */
 SudokuBoard* solveBoard(SudokuBoard* board) {
-	// First algorithm
+	// Very simple algorithm that acts on values that are for sure
 	simpleSolver(board);
 
 	if (isCompleteBoard(board)) {
 		return board;
 	}
-
-	if (isCompleteBoard(board)) {
-		return board;
-	}
-
+	
 	// Last resort brute-force guess
-	return guessSolver(board);
+	return eliminateSolver(board);
 }
 
 /**
@@ -92,14 +81,11 @@ static void simpleSolver(SudokuBoard* board) {
 }
 
 /**
- * Attempts to guess on each empty tile based on the values available
- *
- * This is the brute force method. So it should (in time) return the
- * correct board. If the correct solution could still not be found,
- * returns NULL. That happens if all guesses were exhausted and still
- * no sure solution could be determined. Some solutions just don't work.
+ * Guesses and eliminates possibilities based on the possible values
+ * for each tile. Returns a complete solution or no solution if the guessed
+ * values lead to something invalid or incomplete.
  */
-static SudokuBoard* guessSolver(SudokuBoard* board) {
+static SudokuBoard* eliminateSolver(SudokuBoard* board) {
 	// Get the tile with the minimum number of available values
 	struct EmptyTile* minTile = minimumTile(board);
 	if (minTile == NULL) {

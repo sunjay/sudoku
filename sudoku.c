@@ -19,9 +19,17 @@ SudokuBoard* newSudokuBoard() {
 		return NULL;
 	}
 	for (int i = 0; i < BOARD_SIZE; i++) {
-		sudoku->tiles[i] = calloc(BOARD_SIZE, sizeof(short));
+		sudoku->tiles[i] = calloc(BOARD_SIZE, sizeof(Tile));
 		if (!sudoku->tiles[i]) {
 			return NULL;
+		}
+		for (int j = 0; j < BOARD_SIZE; j++) {
+			// There are BOARD_SIZE possible values for every tile on
+			// an empty board
+			for (int p = 0; p < BOARD_SIZE; p++) {
+				sudoku->tiles[i][j].possibleValues[p] = true;
+			}
+			sudoku->tiles[i][j].possibleCount = BOARD_SIZE;
 		}
 	}
 	return sudoku;
@@ -39,7 +47,7 @@ SudokuBoard* copySudokuBoard(SudokuBoard* board) {
 	}
 
 	for (int i = 0; i < BOARD_SIZE; i++) {
-		copy->tiles[i] = malloc(sizeof(short) * BOARD_SIZE);
+		copy->tiles[i] = malloc(BOARD_SIZE*sizeof(Tile));
 		for (int j = 0; j < BOARD_SIZE; j++) {
 			copy->tiles[i][j] = board->tiles[i][j];
 		}
@@ -64,7 +72,7 @@ void freeSudokuBoard(SudokuBoard* board) {
  *
  * Should always be freed after use.
  */
-SudokuBoard* solvedSudokuBoard() {
+/*SudokuBoard* solvedSudokuBoard() {
 	// A presolved board to shuffle around
 	SudokuBoard* board = newSudokuBoard();
 	if (board == NULL) {
@@ -94,16 +102,29 @@ SudokuBoard* solvedSudokuBoard() {
 	setBoardRow(board, 7, row7);
 	setBoardRow(board, 8, row8);
 	return board;
-}
+}*/
 
 /**
  * Sets all items in a single board row to items
  *
  * items must be exactly BOARD_SIZE size
  */
-void setBoardRow(SudokuBoard* board, int row_i, short items[]) {
+void setBoardRow(SudokuBoard* board, int row_i, Tile* items) {
 	for (int i = 0; i < BOARD_SIZE; i++) {
-		board->tiles[row_i][i] = items[i];
+		Tile* row = board->tiles[row_i];
+		row[i] = items[i];
+	}
+}
+
+/**
+ * Sets all values of all items in a single board row to items
+ *
+ * items must be exactly BOARD_SIZE size
+ */
+void setBoardRowValues(SudokuBoard* board, int row_i, short* items) {
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		Tile* row = board->tiles[row_i];
+		row[i].value = items[i].value;
 	}
 }
 
@@ -112,8 +133,8 @@ void setBoardRow(SudokuBoard* board, int row_i, short items[]) {
  *
  * Should be freed after use
  */
-short* getBoardRow(SudokuBoard* board, int row_i) {
-	short* row = malloc(sizeof(short)*BOARD_SIZE);
+Tile* getBoardRow(SudokuBoard* board, int row_i) {
+	Tile* row = malloc(sizeof(Tile)*BOARD_SIZE);
 	if (!row) {
 		return NULL;
 	}
@@ -129,8 +150,8 @@ short* getBoardRow(SudokuBoard* board, int row_i) {
  *
  * Should be freed after use
  */
-short* getBoardColumn(SudokuBoard* board, int col_i) {
-	short* col = malloc(sizeof(short)*BOARD_SIZE);
+Tile* getBoardColumn(SudokuBoard* board, int col_i) {
+	Tile* col = malloc(sizeof(Tile)*BOARD_SIZE);
 	if (!col) {
 		return NULL;
 	}
@@ -152,8 +173,8 @@ short* getBoardColumn(SudokuBoard* board, int col_i) {
  *
  * Should be freed after use
  */
-short** getBoardBox(SudokuBoard* board, int box_i) {
-	short** box = malloc(sizeof(short*)*BOX_SIZE);
+Tile** getBoardBox(SudokuBoard* board, int box_i) {
+	Tile** box = malloc(sizeof(Tile*)*BOX_SIZE);
 	if (!box) {
 		return NULL;
 	}
@@ -161,7 +182,7 @@ short** getBoardBox(SudokuBoard* board, int box_i) {
 	int y_offset = (box_i / ((int)BOX_SIZE)) * BOX_SIZE;
 	int x_offset = (box_i % ((int)BOX_SIZE)) * BOX_SIZE;
 	for (int i = 0; i < BOX_SIZE; i++) {
-		box[i] = malloc(sizeof(short)*BOX_SIZE);
+		box[i] = malloc(sizeof(Tile)*BOX_SIZE);
 		if (!box[i]) {
 			return NULL; // yes this is a memory leak...
 		}
@@ -175,7 +196,7 @@ short** getBoardBox(SudokuBoard* board, int box_i) {
 /**
  * Frees a box from memory
  */
-void freeBox(short** box) {
+void freeBox(Tile** box) {
 	for (int i = 0; i < BOX_SIZE; i++) {
 		free(box[i]);
 	}
@@ -196,84 +217,18 @@ int coordinatesToBoxIndex(int col_i, int row_i) {
  *
  * Should be freed after use
  */
-short** getTileBox(SudokuBoard* board, int col_i, int row_i) {
+Tile** getTileBox(SudokuBoard* board, int col_i, int row_i) {
 	int box_i = coordinatesToBoxIndex(col_i, row_i);
 	return getBoardBox(board, box_i);
 }
 
 /**
- * Gets a sorted index of all unique numbers surrounding a tile index.
- *
- * Collects numbers in the same box, column and row
- * Returns an array of BOARD_SIZE items. If a number exists around the
- * tile, it will be in the array as is. Otherwise, it will be zero.
- *
- * Should be freed after use
- */
-short* getTileSurroundings(SudokuBoard* board, int col_i, int row_i) {
-	short* col = getBoardColumn(board, col_i);
-	if (col == NULL) {
-		return NULL;
-	}
-	short* row = getBoardRow(board, row_i);
-	if (row == NULL) {
-		free(col);
-		return NULL;
-	}
-	short** box = getTileBox(board, col_i, row_i);
-	if (box == NULL) {
-		free(col);
-		free(row);
-		return NULL;
-	}
-
-	short* numbers = calloc(BOARD_SIZE, sizeof(short));
-	if (!numbers) {
-		free(col);
-		free(row);
-		freeBox(box);
-		return NULL;
-	}
-
-	int found = 0; // non-zero numbers found so far
-	for (int i = 0; i < BOARD_SIZE; i++) {
-		if (col[i] != 0) {
-			short value = col[i];
-			if (numbers[value-1] == value) {
-				found++;
-			}
-			numbers[value-1] = value;
-		}
-		if (row[i] != 0) {
-			short value = row[i];
-			if (numbers[value-1] == value) {
-				found++;
-			}
-			numbers[value-1] = value;
-		}
-		if (box[i / BOX_SIZE][i % BOX_SIZE] != 0) {
-			short value = box[i / BOX_SIZE][i % BOX_SIZE];
-			if (numbers[value-1] == value) {
-				found++;
-			}
-			numbers[value-1] = value;
-		}
-	}
-
-	free(col);
-	free(row);
-	freeBox(box);
-
-	return numbers;
-}
-
-/**
  * Checks for duplicates
  */
-static bool isValid(short* row) {
+static bool isValid(Tile* row) {
 	bool found[BOARD_SIZE] = {false, false, false, false, false, false, false, false, false};
 	for (int i = 0; i < BOARD_SIZE; i++) {
-		short value = row[i];
+		short value = row[i].value;
 		if (value == 0) {
 			continue;
 		}
@@ -293,11 +248,11 @@ static bool isValid(short* row) {
  * Ignores zero values.
  */
 bool isValidTile(SudokuBoard* board, int col_i, int row_i) {
-	short* row = getBoardRow(board, row_i);
-	short* col = getBoardColumn(board, col_i);
-	short** box = getTileBox(board, col_i, row_i);
+	Tile* row = getBoardRow(board, row_i);
+	Tile* col = getBoardColumn(board, col_i);
+	Tile** box = getTileBox(board, col_i, row_i);
 
-	short box_values[BOARD_SIZE];
+	Tile box_values[BOARD_SIZE];
 	for (int i = 0; i < BOX_SIZE; i++) {
 		for (int j = 0; j < BOX_SIZE; j++) {
 			box_values[i*BOX_SIZE + j] = box[i][j];
@@ -321,9 +276,9 @@ bool isValidTile(SudokuBoard* board, int col_i, int row_i) {
 bool isValidBoard(SudokuBoard* board) {
 	for (int i = 0; i < BOARD_SIZE; i++) {
 		// validate box
-		short** box = getBoardBox(board, i);
+		Tile** box = getBoardBox(board, i);
 
-		short box_values[BOARD_SIZE];
+		Tile box_values[BOARD_SIZE];
 		for (int i = 0; i < BOX_SIZE; i++) {
 			for (int j = 0; j < BOX_SIZE; j++) {
 				box_values[i*BOX_SIZE + j] = box[i][j];
@@ -336,7 +291,7 @@ bool isValidBoard(SudokuBoard* board) {
 		}
 
 		// validate column
-		short* col = getBoardColumn(board, i);
+		Tile* col = getBoardColumn(board, i);
 
 		bool colValid = isValid(col);
 		free(col);
@@ -346,7 +301,7 @@ bool isValidBoard(SudokuBoard* board) {
 		}
 
 		// validate row
-		short* row = getBoardRow(board, i);
+		Tile* row = getBoardRow(board, i);
 
 		bool rowValid = isValid(row);
 		free(row);
@@ -365,7 +320,8 @@ bool isCompleteBoard(SudokuBoard* board) {
 	// make sure everything is full
 	for (int i = 0; i < BOARD_SIZE; i++) {
 		for (int j = 0; j < BOARD_SIZE; j++) {
-			if (board->tiles[i][j] == 0) {
+			Tile tile = board->tiles[i][j];
+			if (tile.value == 0) {
 				return false;
 			}
 		}

@@ -53,7 +53,7 @@ void drawSudokuBoard(SudokuBoard* board) {
 		// Row number
 		printf("%d ", row_i + 1, COL_CHAR);
 
-		short* row = board->tiles[row_i];
+		Tile* row = board->tiles[row_i];
 		for (int col_i = 0; col_i < BOARD_SIZE; col_i++) {
 			// board column separator
 			if (col_i % 3 == 0) {
@@ -63,7 +63,7 @@ void drawSudokuBoard(SudokuBoard* board) {
 			// print the value itself
 			printRepeatedCharacters(' ', COL_PADDING);
 
-			int value = row[col_i];
+			int value = row[col_i].value;
 			printf("%d", value);
 
 			printRepeatedCharacters(' ', COL_PADDING);
@@ -83,7 +83,7 @@ void drawSudokuBoard(SudokuBoard* board) {
 void drawSudokuBoardSimple(SudokuBoard* board) {
 	for (int i = 0; i < BOARD_SIZE; i++) {
 		for (int j = 0; j < BOARD_SIZE; j++) {
-			printf("%d", board->tiles[i][j]);
+			printf("%d", board->tiles[i][j].value);
 		}
 		printf("\n");
 	}

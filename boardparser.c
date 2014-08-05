@@ -39,7 +39,7 @@ SudokuBoard* readBoard(FILE* fp) {
 			return NULL;
 		}
 
-		setBoardRow(board, row_i++, row);
+		setBoardRowValues(board, row_i++, row);
 		if (row_i >= BOARD_SIZE) {
 			break;
 		}

@@ -8,7 +8,17 @@
 #define BOARD_SIZE (BOX_SIZE*BOX_SIZE)
 
 typedef struct {
-	short* tiles[BOARD_SIZE];
+	// The value of the tile
+	short value;
+	// Each position in this array represents a valid value for this tile
+	// true if that position is available, false otherwise
+	bool possibleValues[BOARD_SIZE]; /* Not used if value != 0 */
+	// A cache of the number of true values in possibleValues
+	int possibleCount; /* Not used if value != 0 */
+} Tile;
+
+typedef struct {
+	Tile** tiles;
 } SudokuBoard;
 
 // Board creation
@@ -17,17 +27,18 @@ SudokuBoard* solvedSudokuBoard();
 
 // Board deletion
 void freeSudokuBoard(SudokuBoard* board);
-void freeBox(short** box);
+void freeBox(Tile** box);
 
 // Board retrieval methods
-short* getBoardRow(SudokuBoard* board, int row_i);
-short* getBoardColumn(SudokuBoard* board, int col_i);
-short** getBoardBox(SudokuBoard* board, int box_i);
-short** getTileBox(SudokuBoard* board, int col_i, int row_i);
-short* getTileSurroundings(SudokuBoard* board, int col_i, int row_i);
+Tile* getBoardRow(SudokuBoard* board, int row_i);
+Tile* getBoardColumn(SudokuBoard* board, int col_i);
+Tile** getBoardBox(SudokuBoard* board, int box_i);
+Tile** getTileBox(SudokuBoard* board, int col_i, int row_i);
+Tile* getTileSurroundings(SudokuBoard* board, int col_i, int row_i);
 
 // Board set methods
-void setBoardRow(SudokuBoard* board, int row_i, short items[]);
+void setBoardRow(SudokuBoard* board, int row_i, Tile* items);
+void setBoardRowValues(SudokuBoard* board, int row_i, short* items);
 
 // Utility functions
 int coordinatesToBoxIndex(int col_i, int row_i);
