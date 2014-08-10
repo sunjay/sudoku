@@ -105,13 +105,59 @@ void freeSudokuBoard(SudokuBoard* board) {
 }*/
 
 /**
+ * Places a value on the sudoku board. Updates all related possible value
+ * caches and their counts.
+ */
+void placeSudokuValue(SudokuBoard* board, int row_i, int col_i, short value) {
+	// Place the value on its tile
+	board->tiles[row_i][col_i].value = value;
+
+	if (value == 0) {
+		return;
+	}
+
+	// The start index of this tile's box
+	int boxRowStart = (row_i / BOX_SIZE) * BOX_SIZE;
+	int boxColStart = (col_i / BOX_SIZE) * BOX_SIZE;
+
+	// The index at which this value will be found in all possibleValue arrays
+	int valueIndex = value - 1;
+
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		// Update items in the same row
+		Tile* rowItem = &(board->tiles[row_i][i]);
+		if (rowItem->possibleValues[valueIndex]) {
+			// Tile was available, now it is not
+			rowItem->possibleValues[valueIndex] = false;
+			rowItem->possibleCount--;
+		}
+
+		// Update items in the same column
+		Tile* colItem = &(board->tiles[i][col_i]);
+		if (colItem->possibleValues[valueIndex]) {
+			// Tile was available, now it is not
+			colItem->possibleValues[valueIndex] = false;
+			colItem->possibleCount--;
+		}
+
+		// Update items in the same box
+		Tile* boxItem = &(board->tiles[boxRowStart + i / BOX_SIZE][boxColStart + i % BOX_SIZE]);
+		if (boxItem->possibleValues[valueIndex]) {
+			// Tile was available, now it is not
+			boxItem->possibleValues[valueIndex] = false;
+			boxItem->possibleCount--;
+		}
+	}
+}
+
+/**
  * Sets all items in a single board row to items
  *
  * items must be exactly BOARD_SIZE size
  */
 void setBoardRow(SudokuBoard* board, int row_i, Tile* items) {
+	Tile* row = board->tiles[row_i];
 	for (int i = 0; i < BOARD_SIZE; i++) {
-		Tile* row = board->tiles[row_i];
 		row[i] = items[i];
 	}
 }
@@ -123,8 +169,7 @@ void setBoardRow(SudokuBoard* board, int row_i, Tile* items) {
  */
 void setBoardRowValues(SudokuBoard* board, int row_i, short* items) {
 	for (int i = 0; i < BOARD_SIZE; i++) {
-		Tile* row = board->tiles[row_i];
-		row[i].value = items[i].value;
+		placeSudokuValue(board, row_i, i, items[i]);
 	}
 }
 
@@ -317,6 +362,9 @@ bool isValidBoard(SudokuBoard* board) {
  * Returns whether you have a valid, complete board
  */
 bool isCompleteBoard(SudokuBoard* board) {
+	if (board == NULL) {
+		return false;
+	}
 	// make sure everything is full
 	for (int i = 0; i < BOARD_SIZE; i++) {
 		for (int j = 0; j < BOARD_SIZE; j++) {

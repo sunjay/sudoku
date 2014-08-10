@@ -2,24 +2,28 @@
 
 #include "sudoku.h"
 
+struct TilePosition {
+	int row;
+	int col;
+};
+
 static void simpleSolver(SudokuBoard* board);
-static SudokuBoard* guessSolver(SudokuBoard* board);
-static struct EmptyTile* minimumTile(SudokuBoard* board);
-static int count(short value, short items[], int length);
+static SudokuBoard* eliminateSolver(SudokuBoard* board);
+static struct TilePosition* minimumTile(SudokuBoard* board);
 
 /**
  * Sudoku solving algorithm. Returns the solved board or NULL if for some
  * reason the board could not be solved.
  */
 SudokuBoard* solveBoard(SudokuBoard* board) {
-	// Very simple algorithm that acts on values that are for sure
+	// Very simple algorithm that continually fills in values with only one
+	// possible value
 	simpleSolver(board);
 
 	if (isCompleteBoard(board)) {
 		return board;
 	}
-	
-	// Last resort brute-force guess
+
 	return eliminateSolver(board);
 }
 
@@ -42,36 +46,27 @@ static void simpleSolver(SudokuBoard* board) {
 		// board
 		foundValue = false;
 		for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
-			short* row = board->tiles[row_i];
+			Tile* row = board->tiles[row_i];
 			for (int col_i = 0; col_i < BOARD_SIZE; col_i++) {
-				short value = row[col_i];
-				// Is this an empty tile?
-				if (value != 0) {
+				Tile tile = row[col_i];
+				// Is this an empty tile or at least a tile with only one possible move left?
+				if (tile.value != 0 || tile.possibleCount != 1) {
 					continue;
 				}
 
-				short* available_values = getTileSurroundings(board, col_i, row_i);
-				int available_count = count(0, available_values, BOARD_SIZE);
-				if (available_count != 1) {
-					free(available_values);
-					continue; // more than one possible value to place here
-				}
+				bool* possibleValues = tile.possibleValues;
 
-				// The only possible value
+				// The only possible value is the one that is true
 				short only_value = 0;
-				// See the definition of getTileSurroundings for  clarification
-				// on why this next part works
 				for (int k = 0; k < BOARD_SIZE; k++) {
-					if (available_values[k] == 0) {
+					if (possibleValues[k]) {
 						only_value = k + 1;
 						break;
 					}
 				}
 
+				placeSudokuValue(board, row_i, col_i, only_value);
 				foundValue = true;
-				row[col_i] = only_value;
-
-				free(available_values);
 			}
 		}
 		if (!foundValue) {
@@ -81,27 +76,27 @@ static void simpleSolver(SudokuBoard* board) {
 }
 
 /**
- * Guesses and eliminates possibilities based on the possible values
- * for each tile. Returns a complete solution or no solution if the guessed
- * values lead to something invalid or incomplete.
+ * Guesses what a position should be and then places a value based on that.
+ * Continues by attempting to solve the board from there. If that works,
+ * returns a fully filled out works. If anything fails along the way,
+ * returns NULL.
  */
 static SudokuBoard* eliminateSolver(SudokuBoard* board) {
-	// Get the tile with the minimum number of available values
-	struct EmptyTile* minTile = minimumTile(board);
+	// Get the tile with the minimum number of possibilities
+	struct TilePosition* minTile = minimumTile(board);
 	if (minTile == NULL) {
 		return NULL;
 	}
 
 	int row_i = minTile->row;
 	int col_i = minTile->col;
-	short* available_values = minTile->available_values;
+	free(minTile);
 
-	// Go through all available values
+	Tile tile = board->tiles[row_i][col_i];
+	bool* possibleValues = tile.possibleValues;
+
 	for (int j = 0; j < BOARD_SIZE; j++) {
-		// By convention, if this spot in the available_tiles is zero,
-		// the corresponding number (based on the index) is no where in
-		// the box, row or column surrounding this tile
-		if (available_values[j] != 0) {
+		if (!possibleValues[j]) {
 			continue; // skip values that already exist in the vicinity
 		}
 
@@ -112,7 +107,7 @@ static SudokuBoard* eliminateSolver(SudokuBoard* board) {
 		SudokuBoard* copy = copySudokuBoard(board);
 
 		// Make a guess
-		copy->tiles[row_i][col_i] = guess;
+		placeSudokuValue(copy, row_i, col_i, guess);
 
 		// Try to solve the board with this guess
 		SudokuBoard* solved = solveBoard(copy);
@@ -122,71 +117,45 @@ static SudokuBoard* eliminateSolver(SudokuBoard* board) {
 
 		// If there's a solution, return it
 		if (solved != NULL) {
-			free(minTile->available_values);
-			free(minTile);
 			return solved;
 		}
 	}
-
-	free(minTile->available_values);
-	free(minTile);
 	return NULL;
 }
 
-static int count(short value, short items[], int length) {
-	int n = 0;
-	for (int i = 0; i < length; i++) {
-		if (items[i] == value) {
-			n++;
-		}
-	}
-	return n;
-}
-
 /**
- * Returns the tile with the minimum number of available values
+ * Returns the tile with the minimum number of possibilities
  *
  * Returns NULL if no tiles were found
  */
-static struct EmptyTile* minimumTile(SudokuBoard* board) {
-	struct EmptyTile* minTile = malloc(sizeof(struct EmptyTile));
-	if (!minTile) {
+static struct TilePosition* minimumTile(SudokuBoard* board) {
+	struct TilePosition* minTilePos = malloc(sizeof(struct TilePosition));
+	if (!minTilePos) {
 		return NULL;
 	}
-	bool foundMin = false;
+	Tile* minTile = NULL;
 
 	for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
 		for (int col_i = 0; col_i < BOARD_SIZE; col_i++) {
-			short value = board->tiles[row_i][col_i];
-			if (value != 0) {
+			Tile tile = board->tiles[row_i][col_i];
+			if (tile.value != 0) {
 				continue; // tile is already filled, move on
 			}
 
-			short* available_values = getTileSurroundings(board, col_i, row_i);
-			int available_count = count(0, available_values, BOARD_SIZE);
+			int possibleCount = tile.possibleCount;
 
-			if (!foundMin || available_count < minTile->available_count) {
-				if (foundMin && minTile->available_values != NULL) {
-					free(minTile->available_values);
-				}
-
-				minTile->row = row_i;
-				minTile->col = col_i;
-				minTile->available_values = available_values;
-				minTile->available_count = available_count;
-
-				foundMin = true;
-			}
-			else {
-				free(available_values);
+			if (minTile == NULL || possibleCount < minTile->possibleCount) {
+				minTile = &tile;
+				minTilePos->row = row_i;
+				minTilePos->col = col_i;
 			}
 		}
 	}
 
-	if (foundMin) {
-		return minTile;
+	if (minTile != NULL) {
+		return minTilePos;
 	}
 
-	free(minTile);
+	free(minTilePos);
 	return NULL;
 }

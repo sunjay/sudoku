@@ -25,7 +25,7 @@ SudokuBoard* readBoard(FILE* fp) {
 			if (c == EOL) {
 				break;
 			}
-			if (!isdigit(c) || found > ((int)BOARD_SIZE)) {
+			if (!isdigit(c) || found > BOARD_SIZE) {
 				printf("invalid row item");
 				free(line);
 				return NULL;
