@@ -378,3 +378,24 @@ bool isCompleteBoard(SudokuBoard* board) {
 	return isValidBoard(board);
 }
 
+/**
+ * Rates the given board on a scale from 0.0 to 1.0
+ * based on how difficult it is.
+ */
+double getBoardDifficultyRating(SudokuBoard* board) {
+	// More empty tiles = more difficult
+	double empty = 0;
+	// Loop through all tiles and count how many are already
+	// filled
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		for (int j = 0; j < BOARD_SIZE; j++) {
+			Tile tile = board->tiles[i][j];
+			if (tile.value == 0) {
+				empty += 1;
+			}
+		}
+	}
+	
+	// Returns the inverse divided by the maximum board size
+	return empty / (BOARD_SIZE * BOARD_SIZE);
+}

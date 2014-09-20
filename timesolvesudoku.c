@@ -12,6 +12,8 @@
 #include "puzzlesolver.h"
 
 int main(int argc, char* argv[]) {
+	printf("Puzzle Difficulty,Ticks/sec,Resolution (ns),Elapsed Time (s)\n");
+	
 	int totalPuzzles = 0;
 	int completed = 0;
 	double averageSolveTime = 0;
@@ -27,7 +29,9 @@ int main(int argc, char* argv[]) {
 			freeSudokuBoard(board);
 			continue;
 		}
-		drawSudokuBoard(board);
+		//drawSudokuBoard(board);
+		
+		double puzzleDifficulty = getBoardDifficultyRating(board);
 
 		LARGE_INTEGER freq;
 		LARGE_INTEGER t0, tF, tDiff;
@@ -43,11 +47,12 @@ int main(int argc, char* argv[]) {
 		tDiff.QuadPart = tF.QuadPart - t0.QuadPart;
 		elapsedTime = tDiff.QuadPart / (double) freq.QuadPart;
 		resolution = 1.0 / (double) freq.QuadPart;
-		printf("\n");
-		printf("Your performance counter ticks %I64u times per second\n", freq.QuadPart);
-		printf("Resolution is %lf nanoseconds\n", resolution*1e9);
-		printf("Code took %lf sec\n", elapsedTime);
-		printf("\n");
+		//printf("\n");
+		//printf("Your performance counter ticks %I64u times per second\n", freq.QuadPart);
+		//printf("Resolution is %lf nanoseconds\n", resolution*1e9);
+		//printf("Code took %lf sec\n", elapsedTime);
+		//printf("\n");
+		printf("%lf,%I64u,%lf,%lf\n", puzzleDifficulty, freq.QuadPart, resolution*1e9, elapsedTime);
 
 		// Take the running average
 		averageSolveTime = (averageSolveTime * totalPuzzles + elapsedTime)/(totalPuzzles + 1);
@@ -66,7 +71,7 @@ int main(int argc, char* argv[]) {
 			completed++;
 		}
 
-		drawSudokuBoard(solved);
+		//drawSudokuBoard(solved);
 
 		if (solved != board) {
 			freeSudokuBoard(solved);

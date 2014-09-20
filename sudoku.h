@@ -48,6 +48,7 @@ void placeSudokuValue(SudokuBoard* board, int row_i, int col_i, short value);
 // Utility functions
 int coordinatesToBoxIndex(int col_i, int row_i);
 SudokuBoard* copySudokuBoard(SudokuBoard* board);
+double getBoardDifficultyRating(SudokuBoard* board);
 
 // Board validation methods
 bool isValidTile(SudokuBoard* board, int col_i, int row_i);
