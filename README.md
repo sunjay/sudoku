@@ -1,5 +1,5 @@
-Play & Solve Sudoku Puzzles
-===========================
+Solve Sudoku Puzzles
+====================
 
 Author Information
 ------------------
@@ -8,8 +8,11 @@ Website: http://www.sunjay.ca
 
 Introduction
 ------------
-This is a sudoku implementation in C. You can both play sudoku (TODO) and
-solve sudoku puzzles.
+This is a sudoku solving algorithm implemented in C.
+
+All of these programs were written on Windows. If you run into
+any problems, you may need to slightly modify the files to make
+it all work.
 
 Usage
 -----
@@ -17,6 +20,10 @@ Usage
 Compile the project using make:
 
     $ make solvesudoku
+
+Or more simply just:
+
+    $ make
 
 Run it with some input:
 
@@ -46,12 +53,7 @@ each other in the input one right after another.
 
 Once the board is solved, it is printed to standard output.
 
-### Play Sudoku ###
-Compile the project using make:
-
-    $ make playsudoku
-
-TODO: This feature is still incomplete. Once it works I'll let you know.
+The program ends when EOF (Ctrl+Z) is found or when an error occurs.
 
 ### Format Sudoku Puzzles ###
 This simple program can be used to format the output of the solving program (or
@@ -93,7 +95,32 @@ This solves the board and then formats it:
 	9 | 1  6  4 | 8  7  5 | 2  9  3 |
 	---------------------------------
 
-File Structure & Project Details
---------------------------------
+Files Summary
+-------------
 
-TODO.
+### Generic Code Files ###
+These files are used by the executables to do their work.
+
+* sudoku(.c/.h) - A representation of a sudoku board and all the functions
+	that go with accessing/modifying it
+* puzzlesolver(.c/.h) - The actual puzzle solving algorithm
+* boardparser(.c/.h) - A parser for sudoku boards in the format prescribed above
+* drawboard(.c/.h) - For drawing the board onto the screen in either the simple
+	form (used for input) and also in the nicer format with row and column
+	numbers. Boxes are also separated out visually in the second format (as
+	shown above).
+* inputhandler(.c/.h) - Allows you to get input from any file source (such as stdin)
+	since C doesn't provide any reasonable default for that kind of stuff.
+
+### Executable Sources ###
+These files can all be compiled (using make or otherwise) into
+standalone files. These files tie together the other files to
+actually do something.
+
+* formatsudoku.c - Formats sudoku puzzles so they look nice
+* solvesudoku.c - Solves sudoku puzzles and outputs the solution
+* timesolvesudoku.c - Solves sudoku puzzles and then outputs
+	a single row for a CSV file that provides information using
+	a Windows specific profiler.
+	Provides: Puzzle Difficulty,Ticks/sec,Resolution (ns),Elapsed Time (s)
+
