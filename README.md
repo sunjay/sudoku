@@ -14,6 +14,8 @@ All of these programs were written on Windows. If you run into
 any problems, you may need to slightly modify the files to make
 it all work.
 
+**See [ALGORITHM.md](ALGORITHM.md) for more specific details about this Sudoku solving algorithm**
+
 Usage
 -----
 ### Solve Sudoku Puzzles ###
