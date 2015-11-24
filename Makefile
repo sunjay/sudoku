@@ -1,6 +1,7 @@
-CC = gcc
 CFLAGS = -g -O2 -std=c99 -Wall
 OBJECTS = sudoku.o drawboard.o inputhandler.o boardparser.o
+
+all: solvesudoku formatsudoku
 
 solvesudoku : $(OBJECTS) solvesudoku.o puzzlesolver.o
 	$(CC) $(CFLAGS) solvesudoku.o puzzlesolver.o $(OBJECTS) -o solvesudoku
@@ -18,4 +19,4 @@ madness : madness.o
 	$(CC) $(CFLAGS) -c $<
 
 clean:
-	del *.exe *.o *~
+	$(RM) *.exe *.o *~

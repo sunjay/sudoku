@@ -13,10 +13,6 @@
 #define LETTER_0 '0'
 #define COL_PADDING 1
 
-void clearScreen() {
-	system("cls");
-}
-
 static void printRepeatedCharacters(char c, int repeated) {
 	for (int i = 0; i < repeated; i++) {
 		printf("%c", c);
@@ -51,7 +47,7 @@ void drawSudokuBoard(SudokuBoard* board) {
 	printRowLine();
 	for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
 		// Row number
-		printf("%d ", row_i + 1, COL_CHAR);
+		printf("%d ", row_i + 1);
 
 		Tile* row = board->tiles[row_i];
 		for (int col_i = 0; col_i < BOARD_SIZE; col_i++) {

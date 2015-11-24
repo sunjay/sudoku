@@ -1,5 +1,7 @@
 /**
  * Times the sudoku solver
+ * Specifically for windows which doesn't have a great time command like
+ * linux
  */
 
 #include <windows.h>

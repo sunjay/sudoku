@@ -1,3 +1,7 @@
+solvesudoku
+formatsudoku
+timesolvesudoku
+
 # PyCharm
 .idea/
 
@@ -29,3 +33,12 @@ samples/
 *.i*86
 *.x86_64
 *.hex
+
+### Vim ###
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+*~
+
