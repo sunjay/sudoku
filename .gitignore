@@ -5,9 +5,6 @@ timesolvesudoku
 # PyCharm
 .idea/
 
-# sample puzzles
-samples/
-
 # Object files
 *.o
 *.ko
