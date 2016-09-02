@@ -10,9 +10,9 @@ Introduction
 ------------
 This is a sudoku solving algorithm implemented in C.
 
-All of these programs were written on Windows. If you run into
-any problems, you may need to slightly modify the files to make
-it all work.
+These programs were recently modified to work on Linux. Some may no longer
+work on windows. Specifically `timesolvesudoku` was rewritten using a
+Unix-specific function.
 
 **See [ALGORITHM.md](ALGORITHM.md) for more specific details about this Sudoku solving algorithm**
 

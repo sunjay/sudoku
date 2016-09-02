@@ -1,25 +1,44 @@
 /**
- * Times the sudoku solver
- * Specifically for windows which doesn't have a great time command like
- * linux
+ * Times the sudoku solver for every puzzle provided on stdin
+ * Outputs a CSV file to stdout with the timing values
  */
 
-#include <windows.h>
+// From: http://stackoverflow.com/a/3875233/551904
+// Used to prevent `storage size of start isn't known` error
+#if __STDC_VERSION__ >= 199901L
+#define _XOPEN_SOURCE 600
+#else
+#define _XOPEN_SOURCE 500
+#endif /* __STDC_VERSION__ */
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "sudoku.h"
 #include "drawboard.h"
 #include "boardparser.h"
 #include "puzzlesolver.h"
 
+#define BILLION  (1000000000L)
+
 int main(int argc, char* argv[]) {
-	printf("Puzzle Difficulty,Ticks/sec,Resolution (ns),Elapsed Time (s)\n");
+	printf("Puzzle Difficulty,Resolution (ns),Elapsed Time (ns)\n");
 	
 	int totalPuzzles = 0;
 	int completed = 0;
 	double averageSolveTime = 0;
 	double maxTime = 0;
+
+    struct timespec start, stop, res;
+
+    if (clock_getres(CLOCK_MONOTONIC, &res) == -1) {
+        perror("clock getres");
+        exit(EXIT_FAILURE);
+    }
+
+    double resolution = res.tv_sec * BILLION + res.tv_nsec;
+
 	while (true) {
 		SudokuBoard* board = readBoard(stdin);
 		if (board == NULL) {
@@ -35,26 +54,22 @@ int main(int argc, char* argv[]) {
 		
 		double puzzleDifficulty = getBoardDifficultyRating(board);
 
-		LARGE_INTEGER freq;
-		LARGE_INTEGER t0, tF, tDiff;
-		double elapsedTime;
-		double resolution;
-
-		QueryPerformanceFrequency(&freq);
-		QueryPerformanceCounter(&t0);
+        if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) {
+            perror("clock gettime");
+            exit(EXIT_FAILURE);
+        }
 
 		SudokuBoard* solved = solveBoard(board);
 
-		QueryPerformanceCounter(&tF);
-		tDiff.QuadPart = tF.QuadPart - t0.QuadPart;
-		elapsedTime = tDiff.QuadPart / (double) freq.QuadPart;
-		resolution = 1.0 / (double) freq.QuadPart;
-		//printf("\n");
-		//printf("Your performance counter ticks %I64u times per second\n", freq.QuadPart);
-		//printf("Resolution is %lf nanoseconds\n", resolution*1e9);
-		//printf("Code took %lf sec\n", elapsedTime);
-		//printf("\n");
-		printf("%lf,%I64u,%lf,%lf\n", puzzleDifficulty, freq.QuadPart, resolution*1e9, elapsedTime);
+        if (clock_gettime(CLOCK_MONOTONIC, &stop) == -1) {
+            perror("clock gettime");
+            exit(EXIT_FAILURE);
+        }
+
+        double elapsedTime = (stop.tv_sec - start.tv_sec) * BILLION
+                           + (stop.tv_nsec - start.tv_nsec);
+
+		printf("%lf,%lf,%lf\n", puzzleDifficulty, resolution, elapsedTime);
 
 		// Take the running average
 		averageSolveTime = (averageSolveTime * totalPuzzles + elapsedTime)/(totalPuzzles + 1);
@@ -82,8 +97,8 @@ int main(int argc, char* argv[]) {
 	}
 
 	if (totalPuzzles > 0) {
-		printf("Solved %d of %d puzzles (avg %f secs, max %f secs)\n", completed, totalPuzzles, averageSolveTime, maxTime);
+		printf("Solved %d of %d puzzles (avg %f ns, max %f ns)\n", completed, totalPuzzles, averageSolveTime, maxTime);
 	}
 
-	return 0;
+	return EXIT_SUCCESS;
 }

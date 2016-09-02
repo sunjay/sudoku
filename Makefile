@@ -7,7 +7,7 @@ solvesudoku : $(OBJECTS) solvesudoku.o puzzlesolver.o
 	$(CC) $(CFLAGS) solvesudoku.o puzzlesolver.o $(OBJECTS) -o solvesudoku
 
 timesolvesudoku : $(OBJECTS) timesolvesudoku.o puzzlesolver.o
-	$(CC) $(CFLAGS) timesolvesudoku.o puzzlesolver.o $(OBJECTS) -o timesolvesudoku
+	$(CC) $(CFLAGS) timesolvesudoku.o puzzlesolver.o $(OBJECTS) -lrt -o timesolvesudoku
 
 formatsudoku : $(OBJECTS) formatsudoku.o
 	$(CC) $(CFLAGS) formatsudoku.o $(OBJECTS) -o formatsudoku
