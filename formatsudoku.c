@@ -15,14 +15,14 @@
 #include "boardparser.h"
 
 int main(int argc, char* argv[]) {
-	while (true) {
-		SudokuBoard* board = readBoard(stdin);
-		if (board == NULL) {
-			break;
-		}
+    while (true) {
+        SudokuBoard* board = readBoard(stdin);
+        if (board == NULL) {
+            break;
+        }
 
-		drawSudokuBoard(board);
-		freeSudokuBoard(board);
-	}
-	return 0;
+        drawSudokuBoard(board);
+        freeSudokuBoard(board);
+    }
+    return 0;
 }

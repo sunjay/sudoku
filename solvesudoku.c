@@ -16,32 +16,32 @@
 #include "puzzlesolver.h"
 
 int main(int argc, char* argv[]) {
-	while (true) {
-		SudokuBoard* board = readBoard(stdin);
-		if (board == NULL) {
-			break;
-		}
+    while (true) {
+        SudokuBoard* board = readBoard(stdin);
+        if (board == NULL) {
+            break;
+        }
 
-		if (!isValidBoard(board)) {
-			printf("Invalid board.\n");
-			freeSudokuBoard(board);
-			continue;
-		}
+        if (!isValidBoard(board)) {
+            printf("Invalid board.\n");
+            freeSudokuBoard(board);
+            continue;
+        }
 
-		SudokuBoard* solved = solveBoard(board);
+        SudokuBoard* solved = solveBoard(board);
 
-		if (solved == NULL) {
-			printf("No solution found.\n");
-			freeSudokuBoard(board);
-			continue;
-		}
-		drawSudokuBoardSimple(solved);
+        if (solved == NULL) {
+            printf("No solution found.\n");
+            freeSudokuBoard(board);
+            continue;
+        }
+        drawSudokuBoardSimple(solved);
 
-		if (solved != board) {
-			freeSudokuBoard(solved);
-		}
-		freeSudokuBoard(board);
-	}
+        if (solved != board) {
+            freeSudokuBoard(solved);
+        }
+        freeSudokuBoard(board);
+    }
 
-	return 0;
+    return 0;
 }

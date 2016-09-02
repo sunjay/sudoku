@@ -8,18 +8,18 @@
 #define BOARD_SIZE (BOX_SIZE*BOX_SIZE)
 
 typedef struct {
-	// The value of the tile
-	short value;
-	// Each position in this array represents a valid value for this tile
-	// Each value is in the range 1 to BOARD_SIZE+1
-	// true if a value is available, false if a value cannot be used on this tile
-	bool possibleValues[BOARD_SIZE]; /* Not used if value != 0 */
-	// A cache of the number of true values in possibleValues
-	int possibleCount; /* Not used if value != 0 */
+    // The value of the tile
+    short value;
+    // Each position in this array represents a valid value for this tile
+    // Each value is in the range 1 to BOARD_SIZE+1
+    // true if a value is available, false if a value cannot be used on this tile
+    bool possibleValues[BOARD_SIZE]; /* Not used if value != 0 */
+    // A cache of the number of true values in possibleValues
+    int possibleCount; /* Not used if value != 0 */
 } Tile;
 
 typedef struct {
-	Tile* tiles[BOARD_SIZE];
+    Tile* tiles[BOARD_SIZE];
 } SudokuBoard;
 
 // Board creation
