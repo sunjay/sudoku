@@ -8,21 +8,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "sudoku.h"
-
-#define POOL_SIZE 1024
-
-/**
- * Represents a single frame in the memory pool
- */
-typedef struct MemoryPool {
-    SudokuBoard slots[POOL_SIZE];
-    bool occupied[POOL_SIZE];
-    // A hint used to start the search for a new memory pool
-    // Always set to the lowest free space in the pool
-    int searchStart;
-    struct MemoryPool* next;
-} MemoryPool;
+#include "mempool.h"
 
 /**
  * Allocates a single frame memory pool for use
@@ -80,7 +66,7 @@ void freeMemoryPool(MemoryPool* pool) {
  * Allocates a new frame if necessary
  * Returns NULL if something goes wrong
  */
-SudokuBoard* allocSudoku(MemoryPool* pool) {
+SudokuBoard* allocSudokuBoard(MemoryPool* pool) {
     // Technically, this if statement isn't needed because the loop will
     // not run if this condition isn't true. It does however help make
     // the code more understandable, so I'm leaving it in
@@ -105,7 +91,7 @@ SudokuBoard* allocSudoku(MemoryPool* pool) {
         }
     }
 
-    return allocSudoku(pool->next);
+    return allocSudokuBoard(pool->next);
 }
 
 /**
@@ -113,7 +99,7 @@ SudokuBoard* allocSudoku(MemoryPool* pool) {
  * This does not automatically free memory pool frames
  * Frames must be freed using freeMemoryPool()
  */
-void freeSudoku(MemoryPool* pool, SudokuBoard* board) {
+void deallocSudokuBoard(MemoryPool* pool, SudokuBoard* board) {
     for (int i = 0; i < POOL_SIZE; i++) {
         if ((&pool->slots[i]) == board) {
             pool->occupied[i] = false;
@@ -131,7 +117,7 @@ void freeSudoku(MemoryPool* pool, SudokuBoard* board) {
     // continue searching the next frame if there is any
 
     if (pool->next != NULL) {
-        return freeSudoku(pool->next, board);
+        return deallocSudokuBoard(pool->next, board);
     }
 }
 
