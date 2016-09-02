@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	if (totalPuzzles > 0) {
-		printf("Solved %d of %d puzzles (avg %f ns, max %f ns)\n", completed, totalPuzzles, averageSolveTime, maxTime);
+		fprintf(stderr, "Solved %d of %d puzzles (avg %f ns, max %f ns)\n", completed, totalPuzzles, averageSolveTime, maxTime);
 	}
 
 	return EXIT_SUCCESS;
