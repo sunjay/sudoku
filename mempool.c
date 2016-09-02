@@ -114,7 +114,24 @@ SudokuBoard* allocSudoku(MemoryPool* pool) {
  * Frames must be freed using freeMemoryPool()
  */
 void freeSudoku(MemoryPool* pool, SudokuBoard* board) {
-    //TODO
-    //TODO: Check if searchStart is less than i and set it to i if so
+    for (int i = 0; i < POOL_SIZE; i++) {
+        if ((&pool->slots[i]) == board) {
+            pool->occupied[i] = false;
+
+            // Only want to set searchStart if starting the search at this
+            // index will consume the current searchStart index as well
+            // This way, we're always filling the pool from the lowest possible index
+            if (i < pool->searchStart) {
+                pool->searchStart = i;
+            }
+            return;
+        }
+    }
+
+    // continue searching the next frame if there is any
+
+    if (pool->next != NULL) {
+        return freeSudoku(pool->next, board);
+    }
 }
 
