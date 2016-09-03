@@ -3,26 +3,16 @@
  *
  * Author: Sunjay Varma (www.sunjay.ca)
  */
-#include <stdlib.h>
 #include <stdbool.h>
 
 #include "sudoku.h"
 
 /**
- * Generates a completely empty, all zeros board
- *
- * Should always be freed after use.
+ * Initializes a sudoku board to be a completely empty (all zeros) board
+ * Does not allocate any memory
  */
-SudokuBoard* newSudokuBoard() {
-    SudokuBoard* sudoku = malloc(sizeof(SudokuBoard));
-    if (!sudoku) {
-        return NULL;
-    }
+void emptySudokuBoard(SudokuBoard* sudoku) {
     for (int i = 0; i < BOARD_SIZE; i++) {
-        sudoku->tiles[i] = calloc(BOARD_SIZE, sizeof(Tile));
-        if (!sudoku->tiles[i]) {
-            return NULL;
-        }
         for (int j = 0; j < BOARD_SIZE; j++) {
             // There are BOARD_SIZE possible values for every tile on
             // an empty board
@@ -32,37 +22,18 @@ SudokuBoard* newSudokuBoard() {
             sudoku->tiles[i][j].possibleCount = BOARD_SIZE;
         }
     }
-    return sudoku;
 }
 
 /**
- * Copies a board and all of its values
- *
- * Should always be freed after use.
+ * Copies a board and all of its values to the provided copy
+ * Does not allocate any memory
  */
-SudokuBoard* copySudokuBoard(SudokuBoard* board) {
-    SudokuBoard* copy = malloc(sizeof(SudokuBoard));
-    if (!copy) {
-        return NULL;
-    }
-
+void copySudokuBoard(SudokuBoard* board, SudokuBoard* copy) {
     for (int i = 0; i < BOARD_SIZE; i++) {
-        copy->tiles[i] = malloc(BOARD_SIZE*sizeof(Tile));
         for (int j = 0; j < BOARD_SIZE; j++) {
             copy->tiles[i][j] = board->tiles[i][j];
         }
     }
-    return copy;
-}
-
-/**
- * Frees a board from memory
- */
-void freeSudokuBoard(SudokuBoard* board) {
-    for (int i = 0; i < BOARD_SIZE; i++) {
-        free(board->tiles[i]);
-    }
-    free(board);
 }
 
 /**
@@ -113,10 +84,8 @@ void placeSudokuValue(SudokuBoard* board, int row_i, int col_i, short value) {
 
 /**
  * Sets all items in a single board row to items
- *
- * items must be exactly BOARD_SIZE size
  */
-void setBoardRow(SudokuBoard* board, int row_i, Tile* items) {
+void setBoardRow(SudokuBoard* board, int row_i, Tile items[BOARD_SIZE]) {
     Tile* row = board->tiles[row_i];
     for (int i = 0; i < BOARD_SIZE; i++) {
         row[i] = items[i];
@@ -125,107 +94,69 @@ void setBoardRow(SudokuBoard* board, int row_i, Tile* items) {
 
 /**
  * Sets all values of all items in a single board row to items
- *
- * items must be exactly BOARD_SIZE size
  */
-void setBoardRowValues(SudokuBoard* board, int row_i, short* items) {
+void setBoardRowValues(SudokuBoard* board, int row_i, short items[BOARD_SIZE]) {
     for (int i = 0; i < BOARD_SIZE; i++) {
         placeSudokuValue(board, row_i, i, items[i]);
     }
 }
 
 /**
- * Returns an array of size BOARD_SIZE that represents a row of the board
- *
- * Should be freed after use
+ * Copies the values from the row at the given index into the given row
+ * Performs no allocation. row must be large enough for BOARD_SIZE Tiles
  */
-Tile* getBoardRow(SudokuBoard* board, int row_i) {
-    Tile* row = malloc(sizeof(Tile)*BOARD_SIZE);
-    if (!row) {
-        return NULL;
-    }
-
+void getBoardRow(SudokuBoard* board, int row_i, Tile row[BOARD_SIZE]) {
     for (int i = 0; i < BOARD_SIZE; i++) {
         row[i] = board->tiles[row_i][i];
     }
-    return row;
 }
 
 /**
- * Returns an array of size BOARD_SIZE that represents a column of the board
- *
- * Should be freed after use
+ * Copies the values from the column at the given index into the given col
+ * Performs no allocation. col must be large enough for BOARD_SIZE Tiles
  */
-Tile* getBoardColumn(SudokuBoard* board, int col_i) {
-    Tile* col = malloc(sizeof(Tile)*BOARD_SIZE);
-    if (!col) {
-        return NULL;
-    }
-
+void getBoardColumn(SudokuBoard* board, int col_i, Tile col[BOARD_SIZE]) {
     for (int i = 0; i < BOARD_SIZE; i++) {
         col[i] = board->tiles[i][col_i];
     }
-    return col;
 }
 
 /**
- * Gets one of the boxes of the board of BOX_SIZE
- * Returns an array of array pointers that represents the box
+ * Copies the values of the given "box index" into the provided box
+ * box must be an array of array pointers that represents the box
+ * Does not allocate any memory
  *
  * Box indexes work like this for BOARD_SIZE = 9:
  * 0 1 2
  * 3 4 5
  * 6 7 8
- *
- * Should be freed after use
  */
-Tile** getBoardBox(SudokuBoard* board, int box_i) {
-    Tile** box = malloc(sizeof(Tile*)*BOX_SIZE);
-    if (!box) {
-        return NULL;
-    }
-
+void getBoardBox(SudokuBoard* board, int box_i, Tile box[BOX_SIZE][BOX_SIZE]) {
     int y_offset = (box_i / ((int)BOX_SIZE)) * BOX_SIZE;
     int x_offset = (box_i % ((int)BOX_SIZE)) * BOX_SIZE;
     for (int i = 0; i < BOX_SIZE; i++) {
-        box[i] = malloc(sizeof(Tile)*BOX_SIZE);
-        if (!box[i]) {
-            return NULL; // yes this is a memory leak...
-        }
         for (int j = 0; j < BOX_SIZE; j++) {
             box[i][j] = board->tiles[y_offset + i][x_offset + j];
         }
     }
-    return box;
-}
-
-/**
- * Frees a box from memory
- */
-void freeBox(Tile** box) {
-    for (int i = 0; i < BOX_SIZE; i++) {
-        free(box[i]);
-    }
-    free(box);
 }
 
 /**
  * Converts tile column/row position to box index
  */
-int coordinatesToBoxIndex(int col_i, int row_i) {
+static int coordinatesToBoxIndex(int col_i, int row_i) {
     return (row_i / ((int)BOX_SIZE))*BOX_SIZE + col_i / ((int)BOX_SIZE);
 }
 
 /**
  * Gets the tiles in the box surrounding a given tile between
+ * Performs no allocations
  *
  * col and row are the row and column index of the tile
- *
- * Should be freed after use
  */
-Tile** getTileBox(SudokuBoard* board, int col_i, int row_i) {
+void getTileBox(SudokuBoard* board, int col_i, int row_i, Tile box[BOX_SIZE][BOX_SIZE]) {
     int box_i = coordinatesToBoxIndex(col_i, row_i);
-    return getBoardBox(board, box_i);
+    getBoardBox(board, box_i, box);
 }
 
 /**
@@ -252,9 +183,13 @@ static bool isValid(Tile* row) {
  * A board is incorrect if it has any repetitions
  */
 bool isValidBoard(SudokuBoard* board) {
+    Tile row[BOARD_SIZE];
+    Tile col[BOARD_SIZE];
+    Tile box[BOX_SIZE][BOX_SIZE];
+
     for (int i = 0; i < BOARD_SIZE; i++) {
         // validate box
-        Tile** box = getBoardBox(board, i);
+        getBoardBox(board, i, box);
 
         Tile box_values[BOARD_SIZE];
         for (int i = 0; i < BOX_SIZE; i++) {
@@ -262,27 +197,22 @@ bool isValidBoard(SudokuBoard* board) {
                 box_values[i*BOX_SIZE + j] = box[i][j];
             }
         }
-        freeBox(box);
 
         if (!isValid(box_values)) {
             return false;
         }
 
         // validate column
-        Tile* col = getBoardColumn(board, i);
-
+        getBoardColumn(board, i, col);
         bool colValid = isValid(col);
-        free(col);
 
         if (!colValid) {
             return false;
         }
 
         // validate row
-        Tile* row = getBoardRow(board, i);
-
+        getBoardRow(board, i, row);
         bool rowValid = isValid(row);
-        free(row);
 
         if (!rowValid) {
             return false;
@@ -295,9 +225,6 @@ bool isValidBoard(SudokuBoard* board) {
  * Returns whether you have a valid, complete board
  */
 bool isCompleteBoard(SudokuBoard* board) {
-    if (board == NULL) {
-        return false;
-    }
     // make sure everything is full
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
@@ -332,3 +259,4 @@ double getBoardDifficultyRating(SudokuBoard* board) {
     // Returns the inverse divided by the maximum board size
     return empty / (BOARD_SIZE * BOARD_SIZE);
 }
+
