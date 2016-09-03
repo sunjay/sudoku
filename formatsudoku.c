@@ -16,7 +16,9 @@
 int main(int argc, char* argv[]) {
     SudokuBoard board;
     while (true) {
-        readBoard(stdin, &board);
+        if (readBoard(stdin, &board) == -1) {
+            break;
+        }
 
         drawSudokuBoard(&board);
     }
