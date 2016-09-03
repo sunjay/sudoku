@@ -24,7 +24,6 @@ typedef struct {
 
 // Board creation
 SudokuBoard* newSudokuBoard();
-SudokuBoard* solvedSudokuBoard();
 
 // Board deletion
 void freeSudokuBoard(SudokuBoard* board);
@@ -32,11 +31,9 @@ void freeBox(Tile** box);
 
 // Board retrieval methods
 Tile* getBoardRow(SudokuBoard* board, int row_i);
-Tile* getBoardRowCopy(SudokuBoard* board, int row_i);
 Tile* getBoardColumn(SudokuBoard* board, int col_i);
 Tile** getBoardBox(SudokuBoard* board, int box_i);
 Tile** getTileBox(SudokuBoard* board, int col_i, int row_i);
-Tile* getTileSurroundings(SudokuBoard* board, int col_i, int row_i);
 
 // Board set methods
 void setBoardRow(SudokuBoard* board, int row_i, Tile* items);
@@ -51,7 +48,6 @@ SudokuBoard* copySudokuBoard(SudokuBoard* board);
 double getBoardDifficultyRating(SudokuBoard* board);
 
 // Board validation methods
-bool isValidTile(SudokuBoard* board, int col_i, int row_i);
 bool isValidBoard(SudokuBoard* board);
 bool isCompleteBoard(SudokuBoard* board);
 

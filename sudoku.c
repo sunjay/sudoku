@@ -66,45 +66,6 @@ void freeSudokuBoard(SudokuBoard* board) {
 }
 
 /**
- * Generates a valid, completely filled, pre-solved, random board
- *
- * Currently only supports b
- *
- * Should always be freed after use.
- */
-/*SudokuBoard* solvedSudokuBoard() {
-    // A presolved board to shuffle around
-    SudokuBoard* board = newSudokuBoard();
-    if (board == NULL) {
-        return NULL;
-    }
-
-    short row0[BOARD_SIZE] = {1, 2, 3,  4, 5, 6,  7, 8, 9};
-    short row1[BOARD_SIZE] = {4, 5, 6,  7, 8, 9,  1, 2, 3};
-    short row2[BOARD_SIZE] = {7, 8, 9,  1, 2, 3,  4, 5, 6};
-
-    short row3[BOARD_SIZE] = {2, 3, 4,  5, 6, 7,  8, 9, 1};
-    short row4[BOARD_SIZE] = {5, 6, 7,  8, 9, 1,  2, 3, 4};
-    short row5[BOARD_SIZE] = {8, 9, 1,  2, 3, 4,  5, 6, 7};
-
-    short row6[BOARD_SIZE] = {3, 4, 5,  6, 7, 8,  9, 1, 2};
-    short row7[BOARD_SIZE] = {6, 7, 8,  9, 1, 2,  3, 4, 5};
-    short row8[BOARD_SIZE] = {9, 1, 2,  3, 4, 5,  6, 7, 8};
-
-    //TODO: Shuffle rows and columns randomly
-    setBoardRow(board, 0, row0);
-    setBoardRow(board, 1, row1);
-    setBoardRow(board, 2, row2);
-    setBoardRow(board, 3, row3);
-    setBoardRow(board, 4, row4);
-    setBoardRow(board, 5, row5);
-    setBoardRow(board, 6, row6);
-    setBoardRow(board, 7, row7);
-    setBoardRow(board, 8, row8);
-    return board;
-}*/
-
-/**
  * Places a value on the sudoku board. Updates all related possible value
  * caches and their counts.
  */
@@ -283,34 +244,6 @@ static bool isValid(Tile* row) {
         found[value-1] = true;
     }
     return true;
-}
-
-/**
- * Validates a single tile by checking if there are repetitions in the
- * tile's row, column or box. This is much faster than checking the entire
- * board after every move.
- *
- * Ignores zero values.
- */
-bool isValidTile(SudokuBoard* board, int col_i, int row_i) {
-    Tile* row = getBoardRow(board, row_i);
-    Tile* col = getBoardColumn(board, col_i);
-    Tile** box = getTileBox(board, col_i, row_i);
-
-    Tile box_values[BOARD_SIZE];
-    for (int i = 0; i < BOX_SIZE; i++) {
-        for (int j = 0; j < BOX_SIZE; j++) {
-            box_values[i*BOX_SIZE + j] = box[i][j];
-        }
-    }
-
-    bool valid = isValid(row) && isValid(col) && isValid(box_values);
-
-    free(col);
-    free(row);
-    freeBox(box);
-
-    return valid;
 }
 
 /**
