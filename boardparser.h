@@ -3,6 +3,6 @@
 
 #include "sudoku.h"
 
-SudokuBoard* readBoard(FILE* fp);
+int readBoard(FILE* fp, SudokuBoard* board);
 
 #endif

@@ -1,8 +1,6 @@
 #ifndef __INPUT_HANDLER_DEFS
 #define __INPUT_HANDLER_DEFS
 
-#define EOL '\n'
-
-char* getline();
+int getnline(FILE* fp, int target, char buffer[]);
 
 #endif

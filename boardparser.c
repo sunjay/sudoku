@@ -8,41 +8,38 @@
 
 #define LETTER_0 '0'
 
-SudokuBoard* readBoard(FILE* fp) {
-    SudokuBoard* board = newSudokuBoard();
+/**
+ * Attempts to read a board from the given file pointer
+ * A board is represented as 9 digits per line (separated by only '\n')
+ * Exactly 9 lines are read to complete the board
+ * Blank spaces are represented as 0
+ *
+ * Returns 0 if the operation was successful and -1 if there was a parse error
+ */
+int readBoard(FILE* fp, SudokuBoard* board) {
+    char line[BOARD_SIZE];
 
-    int row_i = 0;
-    char* line;
-    while (true) {
-        line = getline(fp);
-        if (line == NULL) { // EOF + Not enough rows given
-            return NULL;
+    for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
+        // Line is too short or possibly too long
+        if (getnline(fp, BOARD_SIZE, line) == -1) {
+            fprintf(stderr, "invalid row size");
+            return -1;
         }
+
         short row[BOARD_SIZE];
-        int found = 0;
-        for (int i = 0, n = strlen(line); i < n; i++) {
+        for (int i = 0; i < BOARD_SIZE; i++) {
             char c = line[i];
-            if (c == EOL) {
-                break;
-            }
-            if (!isdigit(c) || found > BOARD_SIZE) {
-                printf("invalid row item");
-                free(line);
-                return NULL;
-            }
-            row[found++] = c - LETTER_0;
-        }
 
-        free(line);
-        if (found != BOARD_SIZE) {
-            printf("invalid row size");
-            return NULL;
+            if (!isdigit(c)) {
+                fprintf(stderr, "invalid row item");
+                return -1;
+            }
+            row[i] = c - LETTER_0;
         }
 
         setBoardRowValues(board, row_i++, row);
-        if (row_i >= BOARD_SIZE) {
-            break;
-        }
     }
-    return board;
+
+    return 0;
 }
+
