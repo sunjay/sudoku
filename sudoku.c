@@ -11,7 +11,7 @@
  * Converts tile column/row indexes to the appropriate index in the
  * SudokuBoard tiles property
  */
-static int coordinatesToTileIndex(int col_i, int row_i) {
+static int coordinatesToTileIndex(int row_i, int col_i) {
     return row_i * BOARD_SIZE + col_i;
 }
 
