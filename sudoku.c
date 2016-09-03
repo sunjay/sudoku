@@ -8,18 +8,36 @@
 #include "sudoku.h"
 
 /**
+ * Converts tile column/row position to box index
+ */
+static int coordinatesToBoxIndex(int col_i, int row_i) {
+    return (row_i / ((int)BOX_SIZE))*BOX_SIZE + col_i / ((int)BOX_SIZE);
+}
+
+/**
+ * Converts tile column/row indexes to the appropriate index in the
+ * SudokuBoard tiles property
+ */
+static int coordinatesToTileIndex(int col_i, int row_i) {
+    return row_i * BOARD_SIZE + col_i;
+}
+
+/**
  * Initializes a sudoku board to be a completely empty (all zeros) board
  * Does not allocate any memory
  */
 void emptySudokuBoard(SudokuBoard* sudoku) {
+    int index;
+
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
+            index = coordinatesToTileIndex(i, j);
             // There are BOARD_SIZE possible values for every tile on
             // an empty board
             for (int p = 0; p < BOARD_SIZE; p++) {
-                sudoku->tiles[i][j].possibleValues[p] = true;
+                sudoku->tiles[index].possibleValues[p] = true;
             }
-            sudoku->tiles[i][j].possibleCount = BOARD_SIZE;
+            sudoku->tiles[index].possibleCount = BOARD_SIZE;
         }
     }
 }
@@ -29,11 +47,8 @@ void emptySudokuBoard(SudokuBoard* sudoku) {
  * Does not allocate any memory
  */
 void copySudokuBoard(SudokuBoard* board, SudokuBoard* copy) {
-    for (int i = 0; i < BOARD_SIZE; i++) {
-        for (int j = 0; j < BOARD_SIZE; j++) {
-            copy->tiles[i][j] = board->tiles[i][j];
-        }
-    }
+    // Let the compiler generate the copy code
+    *copy = *board;
 }
 
 /**
@@ -42,7 +57,8 @@ void copySudokuBoard(SudokuBoard* board, SudokuBoard* copy) {
  */
 void placeSudokuValue(SudokuBoard* board, int row_i, int col_i, short value) {
     // Place the value on its tile
-    board->tiles[row_i][col_i].value = value;
+    int index = coordinatesToTileIndex(row_i, col_i);
+    board->tiles[index].value = value;
 
     if (value == 0) {
         return;
@@ -57,7 +73,8 @@ void placeSudokuValue(SudokuBoard* board, int row_i, int col_i, short value) {
 
     for (int i = 0; i < BOARD_SIZE; i++) {
         // Update items in the same row
-        Tile* rowItem = &(board->tiles[row_i][i]);
+        index = coordinatesToTileIndex(row_i, i);
+        Tile* rowItem = &(board->tiles[index]);
         if (rowItem->possibleValues[valueIndex]) {
             // Tile was available, now it is not
             rowItem->possibleValues[valueIndex] = false;
@@ -65,7 +82,8 @@ void placeSudokuValue(SudokuBoard* board, int row_i, int col_i, short value) {
         }
 
         // Update items in the same column
-        Tile* colItem = &(board->tiles[i][col_i]);
+        index = coordinatesToTileIndex(i, col_i);
+        Tile* colItem = &(board->tiles[index]);
         if (colItem->possibleValues[valueIndex]) {
             // Tile was available, now it is not
             colItem->possibleValues[valueIndex] = false;
@@ -73,7 +91,9 @@ void placeSudokuValue(SudokuBoard* board, int row_i, int col_i, short value) {
         }
 
         // Update items in the same box
-        Tile* boxItem = &(board->tiles[boxRowStart + i / BOX_SIZE][boxColStart + i % BOX_SIZE]);
+        index = coordinatesToTileIndex(boxRowStart + i / BOX_SIZE,
+                    boxColStart + i % BOX_SIZE);
+        Tile* boxItem = &(board->tiles[index]);
         if (boxItem->possibleValues[valueIndex]) {
             // Tile was available, now it is not
             boxItem->possibleValues[valueIndex] = false;
@@ -86,9 +106,11 @@ void placeSudokuValue(SudokuBoard* board, int row_i, int col_i, short value) {
  * Sets all items in a single board row to items
  */
 void setBoardRow(SudokuBoard* board, int row_i, Tile items[BOARD_SIZE]) {
-    Tile* row = board->tiles[row_i];
+    int index;
+
     for (int i = 0; i < BOARD_SIZE; i++) {
-        row[i] = items[i];
+        index = coordinatesToTileIndex(row_i, i);
+        board->tiles[index] = items[i];
     }
 }
 
@@ -107,7 +129,9 @@ void setBoardRowValues(SudokuBoard* board, int row_i, short items[BOARD_SIZE]) {
  * Tile is a pointer to a single Tile
  */
 void getBoardTile(SudokuBoard* board, int row_i, int col_i, Tile* tile) {
-    *tile = board->tiles[row_i][col_i];
+    int index = coordinatesToTileIndex(row_i, col_i);
+    // The compiler will generate appropriate copy code
+    *tile = board->tiles[index];
 }
 
 /**
@@ -116,7 +140,7 @@ void getBoardTile(SudokuBoard* board, int row_i, int col_i, Tile* tile) {
  */
 void getBoardRow(SudokuBoard* board, int row_i, Tile row[BOARD_SIZE]) {
     for (int i = 0; i < BOARD_SIZE; i++) {
-        row[i] = board->tiles[row_i][i];
+        getBoardTile(board, row_i, i, &row[i]);
     }
 }
 
@@ -126,7 +150,7 @@ void getBoardRow(SudokuBoard* board, int row_i, Tile row[BOARD_SIZE]) {
  */
 void getBoardColumn(SudokuBoard* board, int col_i, Tile col[BOARD_SIZE]) {
     for (int i = 0; i < BOARD_SIZE; i++) {
-        col[i] = board->tiles[i][col_i];
+        getBoardTile(board, i, col_i, &col[i]);
     }
 }
 
@@ -145,16 +169,9 @@ void getBoardBox(SudokuBoard* board, int box_i, Tile box[BOX_SIZE][BOX_SIZE]) {
     int x_offset = (box_i % ((int)BOX_SIZE)) * BOX_SIZE;
     for (int i = 0; i < BOX_SIZE; i++) {
         for (int j = 0; j < BOX_SIZE; j++) {
-            box[i][j] = board->tiles[y_offset + i][x_offset + j];
+            getBoardTile(board, y_offset + i, x_offset + j, &box[i][j]);
         }
     }
-}
-
-/**
- * Converts tile column/row position to box index
- */
-static int coordinatesToBoxIndex(int col_i, int row_i) {
-    return (row_i / ((int)BOX_SIZE))*BOX_SIZE + col_i / ((int)BOX_SIZE);
 }
 
 /**
@@ -234,11 +251,14 @@ bool isValidBoard(SudokuBoard* board) {
  * Returns whether you have a valid, complete board
  */
 bool isCompleteBoard(SudokuBoard* board) {
+    int index;
+
     // make sure everything is full
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
-            Tile tile = board->tiles[i][j];
-            if (tile.value == 0) {
+            index = coordinatesToTileIndex(i, j);
+
+            if (board->tiles[index].value == 0) {
                 return false;
             }
         }
@@ -252,14 +272,16 @@ bool isCompleteBoard(SudokuBoard* board) {
  * based on how difficult it is.
  */
 double getBoardDifficultyRating(SudokuBoard* board) {
+    int index;
+
     // More empty tiles = more difficult
     double empty = 0;
-    // Loop through all tiles and count how many are already
-    // filled
+    // Loop through all tiles and count how many are already filled
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
-            Tile tile = board->tiles[i][j];
-            if (tile.value == 0) {
+            index = coordinatesToTileIndex(i, j);
+
+            if (board->tiles[index].value == 0) {
                 empty += 1;
             }
         }

@@ -19,7 +19,7 @@ typedef struct {
 } Tile;
 
 typedef struct {
-    Tile* tiles[BOARD_SIZE];
+    Tile tiles[BOARD_SIZE * BOARD_SIZE];
 } SudokuBoard;
 
 // Board initialization
