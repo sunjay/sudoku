@@ -26,7 +26,7 @@ static int coordinatesToTileIndex(int col_i, int row_i) {
  * Initializes a sudoku board to be a completely empty (all zeros) board
  * Does not allocate any memory
  */
-void emptySudokuBoard(SudokuBoard* sudoku) {
+void emptySudokuBoard(SudokuBoard* board) {
     int index;
 
     for (int i = 0; i < BOARD_SIZE; i++) {
@@ -35,9 +35,9 @@ void emptySudokuBoard(SudokuBoard* sudoku) {
             // There are BOARD_SIZE possible values for every tile on
             // an empty board
             for (int p = 0; p < BOARD_SIZE; p++) {
-                sudoku->tiles[index].possibleValues[p] = true;
+                board->tiles[index].possibleValues[p] = true;
             }
-            sudoku->tiles[index].possibleCount = BOARD_SIZE;
+            board->tiles[index].possibleCount = BOARD_SIZE;
         }
     }
 }
