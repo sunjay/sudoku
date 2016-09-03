@@ -46,7 +46,8 @@ static void simpleSolver(SudokuBoard* board) {
         // board
         foundValue = false;
         for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
-            Tile* row = board->tiles[row_i];
+            Tile row[BOARD_SIZE];
+            getBoardRow(board, row_i, row);
             for (int col_i = 0; col_i < BOARD_SIZE; col_i++) {
                 Tile tile = row[col_i];
                 // Is this an empty tile or at least a tile with only one possible move left?
@@ -92,7 +93,8 @@ static SudokuBoard* eliminateSolver(SudokuBoard* board) {
     int col_i = minTile->col;
     free(minTile);
 
-    Tile tile = board->tiles[row_i][col_i];
+    Tile tile;
+    getBoardTile(board, row_i, col_i, &tile);
     bool* possibleValues = tile.possibleValues;
 
     for (int j = 0; j < BOARD_SIZE; j++) {
@@ -135,9 +137,11 @@ static struct TilePosition* minimumTile(SudokuBoard* board) {
     }
     Tile* minTile = NULL;
 
+    Tile tile;
+
     for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
         for (int col_i = 0; col_i < BOARD_SIZE; col_i++) {
-            Tile tile = board->tiles[row_i][col_i];
+            getBoardTile(board, row_i, col_i, &tile);
             if (tile.value != 0) {
                 continue; // tile is already filled, move on
             }
@@ -159,3 +163,4 @@ static struct TilePosition* minimumTile(SudokuBoard* board) {
     free(minTilePos);
     return NULL;
 }
+

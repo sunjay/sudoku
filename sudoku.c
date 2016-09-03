@@ -102,6 +102,15 @@ void setBoardRowValues(SudokuBoard* board, int row_i, short items[BOARD_SIZE]) {
 }
 
 /**
+ * Gets a single Tile at the given row_i and col_i position
+ * row_i and col_i are indexes where 0 <= i < BOARD_SIZE
+ * Tile is a pointer to a single Tile
+ */
+void getBoardTile(SudokuBoard* board, int row_i, int col_i, Tile* tile) {
+    *tile = board->tiles[row_i][col_i];
+}
+
+/**
  * Copies the values from the row at the given index into the given row
  * Performs no allocation. row must be large enough for BOARD_SIZE Tiles
  */

@@ -26,6 +26,7 @@ typedef struct {
 void emptySudokuBoard(SudokuBoard*);
 
 // Board retrieval methods
+void getBoardTile(SudokuBoard*, int, int, Tile*);
 void getBoardRow(SudokuBoard*, int, Tile[BOARD_SIZE]);
 void getBoardColumn(SudokuBoard*, int, Tile[BOARD_SIZE]);
 void getBoardBox(SudokuBoard*, int, Tile[BOX_SIZE][BOX_SIZE]);
