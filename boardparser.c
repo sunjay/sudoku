@@ -19,9 +19,8 @@ int readBoard(FILE* fp, SudokuBoard* board) {
     char line[BOARD_SIZE];
 
     for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
-        // Line is too short or possibly too long
+        // EOF or line is too short or too long
         if (getnline(fp, BOARD_SIZE, line) == -1) {
-            fprintf(stderr, "invalid row size");
             return -1;
         }
 
@@ -30,13 +29,13 @@ int readBoard(FILE* fp, SudokuBoard* board) {
             char c = line[i];
 
             if (!isdigit(c)) {
-                fprintf(stderr, "invalid row item");
+                // invalid row item
                 return -1;
             }
             row[i] = c - LETTER_0;
         }
 
-        setBoardRowValues(board, row_i++, row);
+        setBoardRowValues(board, row_i, row);
     }
 
     return 0;
