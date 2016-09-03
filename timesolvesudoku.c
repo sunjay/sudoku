@@ -12,6 +12,7 @@
 #endif /* __STDC_VERSION__ */
 
 #include <stdio.h>
+#include <stdlib.h> // exit, EXIT_FAILURE, EXIT_SUCCESS
 #include <time.h>
 
 #include "sudoku.h"
@@ -38,27 +39,26 @@ int main(int argc, char* argv[]) {
 
     double resolution = res.tv_sec * BILLION + res.tv_nsec;
 
+    int result;
+    SudokuBoard board;
     while (true) {
-        SudokuBoard* board = readBoard(stdin);
-        if (board == NULL) {
+        if (readBoard(stdin, &board) == -1) {
             break;
         }
 
-        if (!isValidBoard(board)) {
+        if (!isValidBoard(&board)) {
             printf("Invalid board.\n");
-            freeSudokuBoard(board);
             continue;
         }
-        //drawSudokuBoard(board);
         
-        double puzzleDifficulty = getBoardDifficultyRating(board);
+        double puzzleDifficulty = getBoardDifficultyRating(&board);
 
         if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) {
             perror("clock gettime");
             exit(EXIT_FAILURE);
         }
 
-        SudokuBoard* solved = solveBoard(board);
+        result = solveBoard(&board);
 
         if (clock_gettime(CLOCK_MONOTONIC, &stop) == -1) {
             perror("clock gettime");
@@ -78,21 +78,13 @@ int main(int argc, char* argv[]) {
             maxTime = elapsedTime;
         }
 
-        if (solved == NULL) {
+        if (result == -1) {
             printf("No solution found.\n");
-            freeSudokuBoard(board);
             continue;
         }
         else {
             completed++;
         }
-
-        //drawSudokuBoard(solved);
-
-        if (solved != board) {
-            freeSudokuBoard(solved);
-        }
-        freeSudokuBoard(board);
     }
 
     if (totalPuzzles > 0) {
