@@ -8,21 +8,17 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "sudoku.h"
 #include "drawboard.h"
 #include "boardparser.h"
 
 int main(int argc, char* argv[]) {
+    SudokuBoard board;
     while (true) {
-        SudokuBoard* board = readBoard(stdin);
-        if (board == NULL) {
-            break;
-        }
+        readBoard(stdin, &board);
 
-        drawSudokuBoard(board);
-        freeSudokuBoard(board);
+        drawSudokuBoard(&board);
     }
     return 0;
 }
