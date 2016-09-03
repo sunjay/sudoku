@@ -8,13 +8,6 @@
 #include "sudoku.h"
 
 /**
- * Converts tile column/row position to box index
- */
-static int coordinatesToBoxIndex(int col_i, int row_i) {
-    return (row_i / ((int)BOX_SIZE))*BOX_SIZE + col_i / ((int)BOX_SIZE);
-}
-
-/**
  * Converts tile column/row indexes to the appropriate index in the
  * SudokuBoard tiles property
  */
@@ -172,17 +165,6 @@ void getBoardBox(SudokuBoard* board, int box_i, Tile box[BOX_SIZE][BOX_SIZE]) {
             getBoardTile(board, y_offset + i, x_offset + j, &box[i][j]);
         }
     }
-}
-
-/**
- * Gets the tiles in the box surrounding a given tile between
- * Performs no allocations
- *
- * col and row are the row and column index of the tile
- */
-void getTileBox(SudokuBoard* board, int col_i, int row_i, Tile box[BOX_SIZE][BOX_SIZE]) {
-    int box_i = coordinatesToBoxIndex(col_i, row_i);
-    getBoardBox(board, box_i, box);
 }
 
 /**

@@ -30,7 +30,6 @@ void getBoardTile(SudokuBoard*, int, int, Tile*);
 void getBoardRow(SudokuBoard*, int, Tile[BOARD_SIZE]);
 void getBoardColumn(SudokuBoard*, int, Tile[BOARD_SIZE]);
 void getBoardBox(SudokuBoard*, int, Tile[BOX_SIZE][BOX_SIZE]);
-void getTileBox(SudokuBoard*, int, int, Tile[BOX_SIZE][BOX_SIZE]);
 
 // Board manipulation methods
 void placeSudokuValue(SudokuBoard*, int, int, short);
