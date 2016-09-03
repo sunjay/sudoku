@@ -16,6 +16,8 @@
  * Returns 0 if the operation was successful and -1 if there was a parse error
  */
 int readBoard(FILE* fp, SudokuBoard* board) {
+    emptySudokuBoard(board);
+
     char line[BOARD_SIZE];
 
     for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
