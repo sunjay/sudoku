@@ -6,7 +6,7 @@
 #define LETTER_A 'A'
 
 void clearScreen();
-void drawSudokuBoard(SudokuBoard* game);
-void drawSudokuBoardSimple(SudokuBoard* board);
+void drawSudokuBoard(SudokuBoard*);
+void drawSudokuBoardSimple(SudokuBoard*);
 
 #endif

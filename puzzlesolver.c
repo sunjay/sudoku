@@ -1,30 +1,31 @@
-#include <stdlib.h>
+#include <stdlib.h> // NULL
 
 #include "sudoku.h"
 
 struct TilePosition {
-	int row;
-	int col;
+    int row;
+    int col;
 };
 
-static void simpleSolver(SudokuBoard* board);
-static SudokuBoard* eliminateSolver(SudokuBoard* board);
-static struct TilePosition* minimumTile(SudokuBoard* board);
+static void simpleSolver(SudokuBoard*);
+static int eliminateSolver(SudokuBoard*);
+static int minimumTile(SudokuBoard*, struct TilePosition*);
 
 /**
- * Sudoku solving algorithm. Returns the solved board or NULL if for some
- * reason the board could not be solved.
+ * Sudoku solving algorithm.
+ *
+ * Returns 0 if solving was successful, -1 otherwise
  */
-SudokuBoard* solveBoard(SudokuBoard* board) {
-	// Very simple algorithm that continually fills in values with only one
-	// possible value
-	simpleSolver(board);
+int solveBoard(SudokuBoard* board) {
+    // Very simple algorithm that continually fills in values with only one
+    // possible value
+    simpleSolver(board);
 
-	if (isCompleteBoard(board)) {
-		return board;
-	}
+    if (isCompleteBoard(board)) {
+        return 0;
+    }
 
-	return eliminateSolver(board);
+    return eliminateSolver(board);
 }
 
 /**
@@ -39,123 +40,146 @@ SudokuBoard* solveBoard(SudokuBoard* board) {
  * Modifies the board in place.
  */
 static void simpleSolver(SudokuBoard* board) {
-	bool foundValue;
-	while (true) {
-		// These variables need to be inside the loop so that they
-		// reset every time the algorithm goes back through the entire
-		// board
-		foundValue = false;
-		for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
-			Tile* row = board->tiles[row_i];
-			for (int col_i = 0; col_i < BOARD_SIZE; col_i++) {
-				Tile tile = row[col_i];
-				// Is this an empty tile or at least a tile with only one possible move left?
-				if (tile.value != 0 || tile.possibleCount != 1) {
-					continue;
-				}
+    // foundValue is used to track whether a tile was solved this time
+    // through the board
+    // We continue going through all the available tiles on the board
+    // until we can't solve any more values with this method
+    bool foundValue;
 
-				bool* possibleValues = tile.possibleValues;
+    Tile tile;
+    while (true) {
+        // These variables need to be inside the loop so that they
+        // reset every time the algorithm goes back through the entire
+        // board
+        foundValue = false;
 
-				// The only possible value is the one that is true
-				short only_value = 0;
-				for (int k = 0; k < BOARD_SIZE; k++) {
-					if (possibleValues[k]) {
-						only_value = k + 1;
-						break;
-					}
-				}
+        for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
+            for (int col_i = 0; col_i < BOARD_SIZE; col_i++) {
+                getBoardTile(board, row_i, col_i, &tile);
 
-				placeSudokuValue(board, row_i, col_i, only_value);
-				foundValue = true;
-			}
-		}
-		if (!foundValue) {
-			break;
-		}
-	}
+                // Is this an empty tile or at least a tile with
+                // only one possible move left?
+                if (tile.value != 0 || tile.possibleCount != 1) {
+                    continue;
+                }
+
+                bool* possibleValues = tile.possibleValues;
+
+                // The only possible value is the one that is true
+                short only_value = 0;
+                for (int k = 0; k < BOARD_SIZE; k++) {
+                    if (possibleValues[k]) {
+                        only_value = k + 1;
+                        break;
+                    }
+                }
+
+                placeSudokuValue(board, row_i, col_i, only_value);
+                foundValue = true;
+            }
+        }
+
+        // Unable to solve anything else, stop trying
+        if (!foundValue) {
+            break;
+        }
+    }
 }
 
 /**
- * Guesses what a position should be and then places a value based on that.
- * Continues by attempting to solve the board from there. If that works,
- * returns a fully filled out works. If anything fails along the way,
- * returns NULL.
+ * Second tier of solving (intelligent brute force)
+ * Makes an intelligent guess about what position to guess on
+ * Guesses an appropriate value and attempts to solve from the first tier
+ * using the modified board
+ * If no solution is found, the initial guess is undone and the search
+ * continues
+ * Only fails if all possible solutions are exhausted.
+ *
+ * Returns 0 if a solution was found, -1 otherwise
  */
-static SudokuBoard* eliminateSolver(SudokuBoard* board) {
-	// Get the tile with the minimum number of possibilities
-	struct TilePosition* minTile = minimumTile(board);
-	if (minTile == NULL) {
-		return NULL;
-	}
+static int eliminateSolver(SudokuBoard* board) {
+    // Get the tile with the minimum number of possibilities
+    // This is the most efficient place to start guessing because
+    // if we guess wrong we will have the fewest number of alternatives
+    // to search
+    // On the otherhand, if we chose the tile with the maximum number
+    // of possible values, we elimate more possible routes by guessing
+    // right. I'm just betting that we'll guess wrong more often then
+    // we guess right since there are more wrong numbers than right ones.
+    struct TilePosition minTile;
+    if (minimumTile(board, &minTile) == -1) {
+        return -1;
+    }
 
-	int row_i = minTile->row;
-	int col_i = minTile->col;
-	free(minTile);
+    int row_i = minTile.row;
+    int col_i = minTile.col;
 
-	Tile tile = board->tiles[row_i][col_i];
-	bool* possibleValues = tile.possibleValues;
+    Tile tile;
+    getBoardTile(board, row_i, col_i, &tile);
 
-	for (int j = 0; j < BOARD_SIZE; j++) {
-		if (!possibleValues[j]) {
-			continue; // skip values that already exist in the vicinity
-		}
+    bool* possibleValues = tile.possibleValues;
 
-		// the value at this index is to be used as the guess
-		short guess = j + 1;
+    SudokuBoard copy;
+    for (int j = 0; j < BOARD_SIZE; j++) {
+        if (!possibleValues[j]) {
+            // Skip values that cannot possibly be solutions
+            continue;
+        }
 
-		// retrieve a copy of a board
-		SudokuBoard* copy = copySudokuBoard(board);
+        // The value at this index is to be used as the guess
+        // Each index in possibleValues represents a value from 1-9
+        // Adding 1 to the index produces the value
+        short guess = j + 1;
 
-		// Make a guess
-		placeSudokuValue(copy, row_i, col_i, guess);
+        // retrieve a copy of a board
+        copySudokuBoard(board, &copy);
 
-		// Try to solve the board with this guess
-		SudokuBoard* solved = solveBoard(copy);
-		if (solved != copy) {
-			freeSudokuBoard(copy);
-		}
+        // Make a guess
+        placeSudokuValue(&copy, row_i, col_i, guess);
 
-		// If there's a solution, return it
-		if (solved != NULL) {
-			return solved;
-		}
-	}
-	return NULL;
+        // Try to solve the board with this guess
+        if (solveBoard(&copy) == 0) {
+            // copy the solution back onto the other board
+            copySudokuBoard(&copy, board);
+            return 0;
+        }
+    }
+
+    // Exhausted this route. It's possible that a guess from before
+    // was incorrect
+    return -1;
 }
 
 /**
  * Returns the tile with the minimum number of possibilities
  *
- * Returns NULL if no tiles were found
+ * Returns 0 if successful, -1 if no tile was found
  */
-static struct TilePosition* minimumTile(SudokuBoard* board) {
-	struct TilePosition* minTilePos = malloc(sizeof(struct TilePosition));
-	if (!minTilePos) {
-		return NULL;
-	}
-	Tile* minTile = NULL;
+static int minimumTile(SudokuBoard* board, struct TilePosition* minTilePos) {
+    Tile* minTile = NULL;
 
-	for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
-		for (int col_i = 0; col_i < BOARD_SIZE; col_i++) {
-			Tile tile = board->tiles[row_i][col_i];
-			if (tile.value != 0) {
-				continue; // tile is already filled, move on
-			}
+    Tile tile;
+    for (int row_i = 0; row_i < BOARD_SIZE; row_i++) {
+        for (int col_i = 0; col_i < BOARD_SIZE; col_i++) {
+            getBoardTile(board, row_i, col_i, &tile);
+            if (tile.value != 0) {
+                continue; // tile is already filled, move on
+            }
 
-			int possibleCount = tile.possibleCount;
+            int possibleCount = tile.possibleCount;
 
-			if (minTile == NULL || possibleCount < minTile->possibleCount) {
-				minTile = &tile;
-				minTilePos->row = row_i;
-				minTilePos->col = col_i;
-			}
-		}
-	}
+            if (minTile == NULL || possibleCount < minTile->possibleCount) {
+                minTile = &tile;
+                minTilePos->row = row_i;
+                minTilePos->col = col_i;
+            }
+        }
+    }
 
-	if (minTile != NULL) {
-		return minTilePos;
-	}
+    if (minTile == NULL) {
+        return -1;
+    }
 
-	free(minTilePos);
-	return NULL;
+    return 0;
 }
+

@@ -3,6 +3,6 @@
 
 #include "sudoku.h"
 
-SudokuBoard* solveBoard(SudokuBoard* board);
+int solveBoard(SudokuBoard*);
 
 #endif

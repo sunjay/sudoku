@@ -1,34 +1,38 @@
 #include <stdio.h>
-#include <stdbool.h>
-#include <stdlib.h>
 
 #include "inputhandler.h"
 
-#define CHUNK_SIZE 64
+#define EOL '\n'
 
-char* getline(FILE* fp) {
-	// read until the end of line or end of file
-	char c;
-	char* line = malloc(sizeof(char)*CHUNK_SIZE);
+/**
+ * Attempts to read exactly the given target number of characters on a line
+ * in the given file pointer.
+ * A newline character is expected exactly after `target` characters has
+ * been read. It is an error if that is not found or if it is found before.
+ *
+ * The read characters are placed in the given buffer
+ * Returns 0 if the line was read successfully, -1 otherwise
+ * Guaranteed to only fill the buffer up to target length
+ * If the function returns -1, there is no guarantee about the buffer's 
+ * contents and whether they will be mutated or not
+ */
+int getnline(FILE* fp, int target, char buffer[]) {
+    char c;
+    for (int i = 0; i < target; i++) {
+        c = getc(fp);
+        if (c == EOF || c == EOL) {
+            return -1;
+        }
 
-	int i = 0;
-	int size = CHUNK_SIZE;
-	while (true) {
-		c = getc(fp);
-		if (c == EOF) {
-			return NULL;
-		}
+        buffer[i] = c;
+    }
 
-		if (i >= size) {
-			size += CHUNK_SIZE;
-			line = realloc(line, sizeof(char)*size);
-		}
+    // Must end with EOL or EOF
+    c = getc(fp);
+    if (c != EOF && c != EOL) {
+        return -1;
+    }
 
-		line[i++] = c;
-		if (c == EOL) {
-			break;
-		}
-	}
-
-	return realloc(line, sizeof(char)*i);
+    return 0;
 }
+

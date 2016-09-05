@@ -8,51 +8,42 @@
 #define BOARD_SIZE (BOX_SIZE*BOX_SIZE)
 
 typedef struct {
-	// The value of the tile
-	short value;
-	// Each position in this array represents a valid value for this tile
-	// Each value is in the range 1 to BOARD_SIZE+1
-	// true if a value is available, false if a value cannot be used on this tile
-	bool possibleValues[BOARD_SIZE]; /* Not used if value != 0 */
-	// A cache of the number of true values in possibleValues
-	int possibleCount; /* Not used if value != 0 */
+    // The value of the tile
+    short value;
+    // Each position in this array represents a valid value for this tile
+    // Each value is in the range 1 to BOARD_SIZE+1
+    // true if a value is available, false if a value cannot be used on this tile
+    bool possibleValues[BOARD_SIZE]; /* Not used if value != 0 */
+    // A cache of the number of true values in possibleValues
+    int possibleCount; /* Not used if value != 0 */
 } Tile;
 
 typedef struct {
-	Tile* tiles[BOARD_SIZE];
+    Tile tiles[BOARD_SIZE * BOARD_SIZE];
 } SudokuBoard;
 
-// Board creation
-SudokuBoard* newSudokuBoard();
-SudokuBoard* solvedSudokuBoard();
-
-// Board deletion
-void freeSudokuBoard(SudokuBoard* board);
-void freeBox(Tile** box);
+// Board initialization
+void emptySudokuBoard(SudokuBoard*);
 
 // Board retrieval methods
-Tile* getBoardRow(SudokuBoard* board, int row_i);
-Tile* getBoardRowCopy(SudokuBoard* board, int row_i);
-Tile* getBoardColumn(SudokuBoard* board, int col_i);
-Tile** getBoardBox(SudokuBoard* board, int box_i);
-Tile** getTileBox(SudokuBoard* board, int col_i, int row_i);
-Tile* getTileSurroundings(SudokuBoard* board, int col_i, int row_i);
+void getBoardTile(SudokuBoard*, int, int, Tile*);
+void getBoardRow(SudokuBoard*, int, Tile[BOARD_SIZE]);
+void getBoardColumn(SudokuBoard*, int, Tile[BOARD_SIZE]);
+void getBoardBox(SudokuBoard*, int, Tile[BOX_SIZE][BOX_SIZE]);
 
-// Board set methods
-void setBoardRow(SudokuBoard* board, int row_i, Tile* items);
-void setBoardRowValues(SudokuBoard* board, int row_i, short* items);
+// Board manipulation methods
+void placeSudokuValue(SudokuBoard*, int, int, short);
 
-// Automatically updates all related possible values arrays and counts
-void placeSudokuValue(SudokuBoard* board, int row_i, int col_i, short value);
+// Bulk board manipulation methods
+void setBoardRow(SudokuBoard*, int, Tile[BOARD_SIZE]);
+void setBoardRowValues(SudokuBoard*, int, short[BOARD_SIZE]);
 
 // Utility functions
-int coordinatesToBoxIndex(int col_i, int row_i);
-SudokuBoard* copySudokuBoard(SudokuBoard* board);
-double getBoardDifficultyRating(SudokuBoard* board);
+void copySudokuBoard(SudokuBoard*, SudokuBoard*);
+double getBoardDifficultyRating(SudokuBoard*);
 
 // Board validation methods
-bool isValidTile(SudokuBoard* board, int col_i, int row_i);
-bool isValidBoard(SudokuBoard* board);
-bool isCompleteBoard(SudokuBoard* board);
+bool isValidBoard(SudokuBoard*);
+bool isCompleteBoard(SudokuBoard*);
 
 #endif

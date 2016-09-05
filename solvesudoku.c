@@ -8,7 +8,6 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "sudoku.h"
 #include "drawboard.h"
@@ -16,32 +15,25 @@
 #include "puzzlesolver.h"
 
 int main(int argc, char* argv[]) {
-	while (true) {
-		SudokuBoard* board = readBoard(stdin);
-		if (board == NULL) {
-			break;
-		}
+    SudokuBoard board;
 
-		if (!isValidBoard(board)) {
-			printf("Invalid board.\n");
-			freeSudokuBoard(board);
-			continue;
-		}
+    while (true) {
+        if (readBoard(stdin, &board) == -1) {
+            break;
+        }
 
-		SudokuBoard* solved = solveBoard(board);
+        if (!isValidBoard(&board)) {
+            printf("Invalid board.\n");
+            continue;
+        }
 
-		if (solved == NULL) {
-			printf("No solution found.\n");
-			freeSudokuBoard(board);
-			continue;
-		}
-		drawSudokuBoardSimple(solved);
+        if (solveBoard(&board) == -1) {
+            printf("No solution found.\n");
+            continue;
+        }
 
-		if (solved != board) {
-			freeSudokuBoard(solved);
-		}
-		freeSudokuBoard(board);
-	}
+        drawSudokuBoardSimple(&board);
+    }
 
-	return 0;
+    return 0;
 }
