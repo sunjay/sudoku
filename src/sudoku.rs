@@ -1,3 +1,6 @@
+use std::fmt;
+use std::iter::repeat;
+
 const BOX_SIZE: usize = 3;
 const BOARD_SIZE: usize = BOX_SIZE * BOX_SIZE;
 
@@ -19,6 +22,12 @@ impl Default for Tile {
             valid_values: [true; BOARD_SIZE],
             remaining_values: BOARD_SIZE,
         }
+    }
+}
+
+impl fmt::Display for Tile {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(&self.value.map(|v| v.to_string()).unwrap_or(" ".to_owned()))
     }
 }
 
@@ -55,6 +64,37 @@ impl Default for Sudoku {
             tiles: Default::default(),
             empty_tiles: BOARD_SIZE * BOARD_SIZE,
         }
+    }
+}
+
+impl fmt::Display for Sudoku {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        const thick_vert: &str = "\u{2551}";
+        const thin_vert: &str = "\u{2502}";
+        let thick_hori: String = repeat("\u{2550}").take(4 * BOARD_SIZE + 1).collect();
+        let thin_hori: String = repeat("\u{2500}").take(4 * BOARD_SIZE + 1).collect();
+
+        write!(f, "{}\n{}", thick_hori, &self.tiles.iter().enumerate().map(|(i, row)| {
+            let row = row.iter().enumerate().map(|(j, tile)| {
+                let tile_sep = if (j + 1) % BOX_SIZE == 0 {
+                    thick_vert
+                }
+                else {
+                    thin_vert
+                };
+
+                format!(" {} {}", tile, tile_sep)
+            }).collect::<String>();
+
+            let row_sep = if (i + 1) % BOX_SIZE == 0 {
+                &thick_hori
+            }
+            else {
+                &thin_hori
+            };
+
+            format!("{}{}\n{}\n", thick_vert, row, row_sep)
+        }).collect::<String>())
     }
 }
 
