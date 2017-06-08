@@ -1,8 +1,8 @@
 use std::fmt;
 use std::iter::repeat;
 
-const BOX_SIZE: usize = 3;
-const BOARD_SIZE: usize = BOX_SIZE * BOX_SIZE;
+pub const BOX_SIZE: usize = 3;
+pub const BOARD_SIZE: usize = BOX_SIZE * BOX_SIZE;
 
 #[derive(Debug, Clone, Copy)]
 struct Tile {
@@ -107,8 +107,8 @@ impl Sudoku {
     /// Places a value on the sudoku board
     pub fn place(&mut self, (row, col): (usize, usize), value: usize) {
         debug_assert!(value > 0 && value <= BOARD_SIZE, "value is not in the right range");
-        debug_assert!(row >= 0 && row < BOARD_SIZE, "row is not in the right range");
-        debug_assert!(col >= 0 && col < BOARD_SIZE, "col is not in the right range");
+        debug_assert!(row < BOARD_SIZE, "row is not in the right range");
+        debug_assert!(col < BOARD_SIZE, "col is not in the right range");
         debug_assert!(self.get((row, col)).value.is_none(), "Placed over already filled tile");
 
         self.get_mut((row, col)).value = Some(value);
@@ -132,6 +132,12 @@ impl Sudoku {
         }
     }
 
+    pub fn solve(&mut self) {
+        //while !self.is_complete() {
+            while (self.fill_obvious() > 0) {}
+        //}
+    }
+
     fn get(&self, (row, col): (usize, usize)) -> &Tile {
         &self.tiles[row][col]
     }
@@ -140,20 +146,18 @@ impl Sudoku {
         &mut self.tiles[row][col]
     }
 
-    fn solve(&mut self) {
-        while !self.is_complete() {
-            self.fill_obvious();
-        }
-    }
-
-    fn fill_obvious(&mut self) {
+    fn fill_obvious(&mut self) -> usize {
+        let mut count = 0;
         for row in &mut self.tiles {
             for tile in row {
-                if tile.remaining_moves() == 1 {
+                if tile.value.is_none() && tile.remaining_moves() == 1 {
                     tile.value = tile.first_valid_move();
                     debug_assert!(tile.value.is_some());
+                    count += 1;
                 }
             }
         }
+
+        count
     }
 }
