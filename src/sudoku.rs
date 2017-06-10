@@ -48,11 +48,16 @@ impl Tile {
 
     /// Returns the first valid move that is available for this tile or None if there aren't any
     pub fn first_valid_move(&self) -> Option<usize> {
-        self.valid_values.iter().enumerate().find(|&(_, &v)| v).map(|(i, _)| i + 1)
+        self.valid_moves().first()
+    }
+
+    /// Returns an iterator going through all the valid moves that could be placed at this tile
+    pub fn valid_moves<'a>(&self) -> impl Iterator<Item=usize> + 'a {
+        self.valid_values.iter().enumerate().filter(|&(_, &v)| v).map(|(i, _)| i + 1)
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Sudoku {
     tiles: [[Tile; BOARD_SIZE]; BOARD_SIZE],
     empty_tiles: usize,
@@ -69,12 +74,12 @@ impl Default for Sudoku {
 
 impl fmt::Display for Sudoku {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        const thick_vert: &str = "\u{2551}";
-        const thin_vert: &str = "\u{2502}";
+        let thick_vert: &str = "\u{2551}";
+        let thin_vert: &str = "\u{2502}";
         let thick_hori: String = repeat("\u{2550}").take(4 * BOARD_SIZE + 1).collect();
         let thin_hori: String = repeat("\u{2500}").take(4 * BOARD_SIZE + 1).collect();
 
-        write!(f, "{}\n{}", thick_hori, &self.tiles.iter().enumerate().map(|(i, row)| {
+        write!(f, "{}{}", thick_hori, &self.tiles.iter().enumerate().map(|(i, row)| {
             let row = row.iter().enumerate().map(|(j, tile)| {
                 let tile_sep = if (j + 1) % BOX_SIZE == 0 {
                     thick_vert
@@ -93,7 +98,7 @@ impl fmt::Display for Sudoku {
                 &thin_hori
             };
 
-            format!("{}{}\n{}\n", thick_vert, row, row_sep)
+            format!("\n{}{}\n{}", thick_vert, row, row_sep)
         }).collect::<String>())
     }
 }
@@ -112,6 +117,7 @@ impl Sudoku {
         debug_assert!(self.get((row, col)).value.is_none(), "Placed over already filled tile");
 
         self.get_mut((row, col)).value = Some(value);
+        self.empty_tiles -= 1;
 
         // The starting row and column of the box that this value belongs in
         let box_row_start = (row / BOX_SIZE) * BOX_SIZE;
@@ -133,9 +139,65 @@ impl Sudoku {
     }
 
     pub fn solve(&mut self) {
-        //while !self.is_complete() {
-            while (self.fill_obvious() > 0) {}
-        //}
+        if self.is_complete() {
+            return;
+        }
+
+        while !self.is_complete() {
+            let tile = self.tiles.iter().enumerate().filter_map(|(i, row)| {
+                row.iter().enumerate().filter(|&(_, tile)| tile.value.is_none())
+                    .filter_map(|(j, tile)| {
+                        let remaining = tile.remaining_moves();
+                        if remaining > 0 {
+                            Some((i, j, remaining))
+                        }
+                        else { None }
+                    })
+                    .min_by_key(|&(_, _, remaining)| remaining)
+            }).min();
+            // not solvable because no valid tiles left
+            if tile.is_none() {
+                break;
+            }
+            let (i, j, remaining) = tile.unwrap();
+
+            // fill in obvious moves first
+            if remaining == 1 {
+                let value = {
+                    let tile = self.get((i, j));
+                    debug_assert!(tile.value.is_none());
+                    debug_assert!(tile.remaining_moves() == 1);
+                    tile.first_valid_move().unwrap()
+                };
+
+                self.place((i, j), value);
+
+                {
+                    let tile = self.get((i, j));
+                    debug_assert!(tile.value.is_some());
+                }
+            }
+            // make a guess
+            else {
+                let mut game = (*self).clone();
+
+                {
+                    let tile = self.get((i, j));
+                    debug_assert!(tile.value.is_none());
+                    debug_assert!(tile.remaining_moves() > 0);
+                }
+
+                let guess = self.get((i, j)).first_valid_move().unwrap();
+                game.place((i, j), guess);
+                println!("{}", game);
+                println!("Guessing {}, remaining {}", guess, game.empty_tiles);
+                game.solve();
+                if game.is_complete() {
+                    *self = game;
+                    return;
+                }
+            }
+        }
     }
 
     fn get(&self, (row, col): (usize, usize)) -> &Tile {
@@ -144,20 +206,5 @@ impl Sudoku {
 
     fn get_mut(&mut self, (row, col): (usize, usize)) -> &mut Tile {
         &mut self.tiles[row][col]
-    }
-
-    fn fill_obvious(&mut self) -> usize {
-        let mut count = 0;
-        for row in &mut self.tiles {
-            for tile in row {
-                if tile.value.is_none() && tile.remaining_moves() == 1 {
-                    tile.value = tile.first_valid_move();
-                    debug_assert!(tile.value.is_some());
-                    count += 1;
-                }
-            }
-        }
-
-        count
     }
 }

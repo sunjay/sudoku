@@ -1,3 +1,5 @@
+#![feature(conservative_impl_trait)]
+
 mod sudoku;
 
 use std::io;
