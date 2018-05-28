@@ -1,4 +1,4 @@
-CFLAGS = -g -O2 -std=c99 -Wall
+CFLAGS = -g -O3 -std=c99 -Wall
 OBJECTS = sudoku.o drawboard.o inputhandler.o boardparser.o
 
 all: solvesudoku formatsudoku
