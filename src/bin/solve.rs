@@ -17,6 +17,6 @@ fn main() {
             continue;
         }
 
-        println!("{}", board);
+        print!("{}", board);
     }
 }

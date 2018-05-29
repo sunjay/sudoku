@@ -123,7 +123,7 @@ impl Sudoku {
     /// A board is invalid if there are duplicate numbers in any row, column, or box
     /// or if any of its values are out of the range 0 to BOARD_SIZE inclusive.
     pub fn is_valid(&self) -> bool {
-        unimplemented!();
+        true // TODO
     }
 
     /// Returns true if the board is completely filled
@@ -266,7 +266,7 @@ impl Sudoku {
         // right. I'm just betting that we'll guess wrong more often then
         // we guess right since there are more wrong numbers than right ones.
 
-        let (min_row, min_col) = self.min_possible_values()?;
+        let (min_row, min_col) = self.min_possible_empty_tile()?;
         let possible_values = self.tiles[min_row][min_col].possible_values;
 
         for i in 0..BOARD_SIZE {
@@ -283,9 +283,6 @@ impl Sudoku {
             // Make a guess
             let mut copy = self.clone();
             copy.place((min_row, min_col), guess);
-            println!("Guess ({}, {}) {} on\n{}\n", min_row, min_col, guess, copy);
-            let remaining: usize = copy.tiles.iter().map(|row| row.iter().filter(|t| t.value == 0).count()).sum();
-            println!("Remaining: {}\n", remaining);
 
             // Try to solve the board with this guess
             if copy.solve().is_ok() {
@@ -298,7 +295,7 @@ impl Sudoku {
     }
 
     // Returns the tile with the minimum number of possibilities
-    fn min_possible_values(&self) -> Result<(usize, usize), SolverError> {
+    fn min_possible_empty_tile(&self) -> Result<(usize, usize), SolverError> {
         let mut min = Err(SolverError::NoSolution);
 
         for (row_i, row) in self.tiles.iter().enumerate() {
