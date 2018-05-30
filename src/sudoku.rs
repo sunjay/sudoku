@@ -222,7 +222,7 @@ impl Sudoku {
             // until we can't solve any more values with this method
             let mut found = None;
 
-            for (row_i, row) in self.tiles.iter_mut().enumerate() {
+            'search: for (row_i, row) in self.tiles.iter_mut().enumerate() {
                 for (col_i, tile) in row.iter_mut().enumerate() {
                     // Skip if this is not an empty tile or a tile with only a single possible value
                     // remaining
@@ -234,6 +234,7 @@ impl Sudoku {
                     for (value, possible) in tile.possible_values.iter().enumerate() {
                         if *possible {
                             found = Some((row_i, col_i, (value + 1) as u8));
+                            break 'search;
                         }
                     }
                     tile.possible_count = tile.possible_values.len();
