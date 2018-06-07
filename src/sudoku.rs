@@ -193,60 +193,11 @@ impl Sudoku {
     ///
     /// Only fails if all possible solutions are exhausted
     pub fn solve(&mut self) -> Result<(), SolverError> {
-        // Very simple algorithm that continually fills in values with only one possible value
-        // Finishes the "obvious" solutions so we don't waste any time looking for them
-        self.simple_solve();
-
         if self.is_complete_board() {
             Ok(())
         }
         else {
             self.guess_solve()
-        }
-    }
-
-    /// The first tier and simplest solving algorithm.
-    ///
-    /// This algorithm goes through all empty tiles and checks what values
-    /// are available/valid for each tile. If there is only one possibility, that
-    /// is placed on that space.
-    ///
-    /// Solves as much as possible. Complete solution not guaranteed.
-    ///
-    /// Modifies the board in place.
-    fn simple_solve(&mut self) {
-        loop {
-            // found is used to track whether a tile was solved this time
-            // through the board
-            // We continue going through all the available tiles on the board
-            // until we can't solve any more values with this method
-            let mut found = None;
-
-            'search: for (row_i, row) in self.tiles.iter_mut().enumerate() {
-                for (col_i, tile) in row.iter_mut().enumerate() {
-                    // Skip if this is not an empty tile or a tile with only a single possible value
-                    // remaining
-                    if tile.value != 0 || tile.possible_count != 1 {
-                        continue;
-                    }
-
-                    // The only possible value is the one that is true
-                    for (value, possible) in tile.possible_values.iter().enumerate() {
-                        if *possible {
-                            found = Some((row_i, col_i, (value + 1) as u8));
-                            break 'search;
-                        }
-                    }
-                    tile.possible_count = tile.possible_values.len();
-                }
-            }
-
-            if let Some((row, col, value)) = found {
-                self.place((row, col), value);
-            }
-            else {
-                break;
-            }
         }
     }
 
