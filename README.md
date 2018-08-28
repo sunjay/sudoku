@@ -1,6 +1,6 @@
 # sudoku
 
-This is implementation of a sudoku solver is written in the [Rust programming
+This implementation of a sudoku solver is written in the [Rust programming
 language]. The solver was initially programmed in C and the [source code for the
 C implementation][c-impl] is still available. The C code was last edited in
 2016.
@@ -12,9 +12,9 @@ decided to do a cursory benchmark just to see if there was any difference. I was
 expecting the Rust code to be slower and first and that I would need to optimize
 it quite a bit. Surprisingly, it turned out to be the complete opposite. The
 Rust implementation was **orders of magnitude** faster than my C implementation.
-I'm not the best C programmer in the world, so my C code was already not totally
-optimal. Even still, the Rust code mostly resembled the C code but still managed
-to be **significantly faster**.
+I'm not the best C programmer in the world, so I can't say my C code was
+completely optimal. The amazing part here is that my Rust code mostly resembled
+the C code but was still **significantly faster**.
 
 Some non-scientific timing data I collected at the time:
 
@@ -22,9 +22,9 @@ Some non-scientific timing data I collected at the time:
 * Rust implementation: 0.644 seconds
 
 This is the time it took to solve 95 "hard" puzzles (`samples/hard95.txt`). The
-difference between the two implementations is huge and I imagine that as I make
-the Rust implementation more idiomatic and more optimal we will see even more of
-a speedup.
+difference between the two implementations is huge and I imagine that as I
+optimize the Rust implementation and make it more idiomatic we will see even
+more of a speedup.
 
 ## Algorithm
 
