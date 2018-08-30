@@ -3,10 +3,24 @@ name = "sudoku"
 version = "0.1.0"
 authors = ["Sunjay Varma <varma.sunjay@gmail.com>"]
 
-[dependencies]
-
 [profile.dev]
 opt-level = 3
 
 [profile.test]
 opt-level = 3
+
+[dependencies]
+
+[dev-dependencies]
+criterion = "0.2"
+
+[lib]
+bench = false
+
+[[bin]]
+name = "solve"
+bench = false
+
+[[bench]]
+name = "sudoku_solver"
+harness = false
