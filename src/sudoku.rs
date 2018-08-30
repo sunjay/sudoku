@@ -46,6 +46,18 @@ impl Tile {
     pub fn set(&mut self, value: NonZeroU8) {
         self.value = Some(value);
     }
+
+    /// Marks the given value as no longer available for this tile
+    pub fn mark_unavailable(&mut self, value: NonZeroU8) {
+        // The index at which this value will be found in all possible_values array
+        // This subtraction can never panic because NonZeroU8 >= 1
+        let value_index = value.get() as usize - 1;
+        if self.possible_values[value_index] {
+            // Tile was available, but now it is not
+            self.possible_values[value_index] = false;
+            self.possible_count -= 1;
+        }
+    }
 }
 
 #[derive(Debug, Clone, Eq)]
@@ -169,39 +181,17 @@ impl Sudoku {
         let box_row_start = (row / BOX_SIZE) * BOX_SIZE;
         let box_col_start = (col / BOX_SIZE) * BOX_SIZE;
 
-        // The index at which this value will be found in all possible_values array
-        let value_index = (value.get() - 1) as usize;
-
         for i in 0..BOARD_SIZE {
             // Update items in the same row as the placed tile
-            {
-                let item = &mut self.tiles[row][i];
-                if item.possible_values[value_index] {
-                    // Tile was available, now it is not
-                    item.possible_values[value_index] = false;
-                    item.possible_count -= 1;
-                }
-            }
+            self.tiles[row][i].mark_unavailable(value);
 
             // Update items in the same column as the placed tile
-            {
-                let item = &mut self.tiles[i][col];
-                if item.possible_values[value_index] {
-                    // Tile was available, now it is not
-                    item.possible_values[value_index] = false;
-                    item.possible_count -= 1;
-                }
-            }
+            self.tiles[i][col].mark_unavailable(value);
 
             // Update items in the same box as the placed tile
-            {
-                let item = &mut self.tiles[box_row_start + i / BOX_SIZE][box_col_start + i % BOX_SIZE];
-                if item.possible_values[value_index] {
-                    // Tile was available, now it is not
-                    item.possible_values[value_index] = false;
-                    item.possible_count -= 1;
-                }
-            }
+            let box_row = box_row_start + i / BOX_SIZE;
+            let box_col = box_col_start + i % BOX_SIZE;
+            self.tiles[box_row][box_col].mark_unavailable(value);
         }
     }
 
