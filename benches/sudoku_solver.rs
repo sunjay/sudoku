@@ -14,7 +14,7 @@ macro_rules! solver_bench_group {
     ($($name:ident, $file:expr;)*) => {
         criterion_group! {
             name = solver;
-            config = Criterion::default().sample_size(10);
+            config = Criterion::default().sample_size(10).noise_threshold(0.025);
             targets = $($name),*
         }
 
