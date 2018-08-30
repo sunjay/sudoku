@@ -1,6 +1,7 @@
 use std::{
     fmt,
     io::{self, Read},
+    num::NonZeroU8,
 };
 
 // The width and height of a single "box" on the board
@@ -22,9 +23,9 @@ pub enum ReadError {
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct Tile {
-    /// The numeric value of the tile - value between 0 and BOARD_SIZE
-    /// 0 means that the tile is empty
-    value: u8,
+    /// The numeric value of the tile - value between 1 and BOARD_SIZE (inclusive)
+    /// None - tile is empty
+    value: Option<NonZeroU8>,
 
     /// Represents every possible value that could be placed on this tile
     ///
@@ -33,8 +34,18 @@ pub struct Tile {
     possible_values: [bool; BOARD_SIZE],
 
     /// A cache of the number of true values in possibleValues
-    /// Not used if value != 0
+    /// Not used if tile is not empty
     possible_count: usize,
+}
+
+impl Tile {
+    pub fn is_empty(&self) -> bool {
+        self.value.is_none()
+    }
+
+    pub fn set(&mut self, value: NonZeroU8) {
+        self.value = Some(value);
+    }
 }
 
 #[derive(Debug, Clone, Eq)]
@@ -70,7 +81,7 @@ impl fmt::Display for Sudoku {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for row in &self.tiles {
             for tile in row {
-                write!(f, "{}", tile.value)?;
+                write!(f, "{}", tile.value.map(|x| x.get()).unwrap_or(0))?;
             }
             writeln!(f)?;
         }
@@ -118,7 +129,10 @@ impl Sudoku {
             for col_i in 0..BOARD_SIZE {
                 let value = buffer[col_i];
                 if value.is_ascii_digit() {
-                    board.place((row_i, col_i), value - b'0');
+                    // Only place the tile if the value is not zero
+                    NonZeroU8::new(value - b'0').map(|value| {
+                        board.place((row_i, col_i), value);
+                    });
                 }
                 else {
                     return Err(ReadError::InvalidDigit(value as char));
@@ -143,23 +157,20 @@ impl Sudoku {
 
     /// Places a value on the sudoku board. Updates all related possible value
     /// caches and their counts.
-    pub fn place(&mut self, (row, col): (usize, usize), value: u8) {
-        assert!(value <= BOARD_SIZE as u8, "value `{}` is invalid", value);
-        if self.tiles[row][col].value == 0 && value != 0 {
+    pub fn place(&mut self, (row, col): (usize, usize), value: NonZeroU8) {
+        assert!(value.get() <= BOARD_SIZE as u8, "value `{}` is invalid", value);
+        // Only decrement the empty tile count if the tile was previously empty
+        if self.tiles[row][col].is_empty() {
             self.empty_tiles -= 1;
         }
-        self.tiles[row][col].value = value;
-
-        if value == 0 {
-            return;
-        }
+        self.tiles[row][col].set(value);
 
         // The start index of this tile's box
         let box_row_start = (row / BOX_SIZE) * BOX_SIZE;
         let box_col_start = (col / BOX_SIZE) * BOX_SIZE;
 
         // The index at which this value will be found in all possible_values array
-        let value_index = (value - 1) as usize;
+        let value_index = (value.get() - 1) as usize;
 
         for i in 0..BOARD_SIZE {
             // Update items in the same row as the placed tile
@@ -235,7 +246,8 @@ impl Sudoku {
             // The value at this index is to be used as the guess
             // Each index in possibleValues represents a value from 1-9
             // Adding 1 to the index produces the value
-            let guess = (i + 1) as u8;
+            // This unwrap is safe because a u8 is >= 0 and adding 1 means the value is >= 1
+            let guess = NonZeroU8::new(i as u8 + 1).unwrap();
 
             // Make a guess
             let mut copy = self.clone();
@@ -258,7 +270,7 @@ impl Sudoku {
         for (row_i, row) in self.tiles.iter().enumerate() {
             for (col_i, tile) in row.iter().enumerate() {
                 // If the tile is already filled, move on
-                if tile.value != 0 {
+                if !tile.is_empty() {
                     continue;
                 }
 
