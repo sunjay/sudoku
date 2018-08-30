@@ -33,7 +33,7 @@ pub struct Tile {
     /// true if a value is available, false if a value cannot be used on this tile
     possible_values: [bool; BOARD_SIZE],
 
-    /// A cache of the number of true values in possibleValues
+    /// A cache of the number of true values in possible_values
     /// Not used if tile is not empty
     possible_count: usize,
 }
@@ -231,7 +231,7 @@ impl Sudoku {
             }
 
             // The value at this index is to be used as the guess
-            // Each index in possibleValues represents a value from 1-9
+            // Each index in possible_values represents a value from 1-9
             // Adding 1 to the index produces the value
             // This unwrap is safe because a u8 is >= 0 and adding 1 means the value is >= 1
             let guess = NonZeroU8::new(i as u8 + 1).unwrap();
