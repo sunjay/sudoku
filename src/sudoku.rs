@@ -123,7 +123,7 @@ impl Sudoku {
     /// Creates a new sudoku board by reading 9 rows of 9 digits representing the values currently
     /// filled and unfilled in the grid. 0 represents an empty tile.
     pub fn read_board<R: Read>(mut reader: R) -> Result<Self, ReadError> {
-        assert_eq!(BOARD_SIZE, 9, "This function assumes that BOARD_SIZE is 9");
+        debug_assert_eq!(BOARD_SIZE, 9, "This function assumes that BOARD_SIZE is 9");
 
         let mut board = Self::default();
 
@@ -167,7 +167,7 @@ impl Sudoku {
     /// Places a value on the sudoku board. Updates all related possible value
     /// caches and their counts.
     pub fn place(&mut self, (row, col): (usize, usize), value: NonZeroU8) {
-        assert!(value.get() <= BOARD_SIZE as u8, "value `{}` is invalid", value);
+        debug_assert!(value.get() <= BOARD_SIZE as u8, "value `{}` is invalid", value);
         // Only decrement the empty tile count if the tile was previously empty
         if self.tiles[row][col].is_empty() {
             self.empty_tiles -= 1;
