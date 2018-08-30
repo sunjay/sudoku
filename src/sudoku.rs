@@ -42,11 +42,16 @@ pub struct Sudoku {
     /// Tiles are stored row-wise
     /// So index with tiles[row][col]
     tiles: [[Tile; BOARD_SIZE]; BOARD_SIZE],
+    /// The number of empty tiles remaining
+    empty_tiles: usize,
 }
 
 impl Default for Sudoku {
     fn default() -> Self {
-        let mut sudoku = Sudoku {tiles: Default::default()};
+        let mut sudoku = Sudoku {
+            tiles: Default::default(),
+            empty_tiles: BOARD_SIZE * BOARD_SIZE,
+        };
         // Initialize the board to be completely empty and set all values as possible
         for row in &mut sudoku.tiles {
             for tile in row {
@@ -76,6 +81,11 @@ impl fmt::Display for Sudoku {
 
 impl PartialEq for Sudoku {
     fn eq(&self, other: &Self) -> bool {
+        // Able to short-circuit faster if the number of empty tiles is different
+        if self.empty_tiles != other.empty_tiles {
+            return false;
+        }
+
         // Boards should be the same if their tile values are the same regardless of the other
         // metadata stored
         for (row_a, row_b) in self.tiles.iter().zip(other.tiles.iter()) {
@@ -128,21 +138,16 @@ impl Sudoku {
 
     /// Returns true if the board is completely filled
     pub fn is_complete_board(&self) -> bool {
-        for row in &self.tiles {
-            for tile in row {
-                if tile.value == 0 {
-                    return false;
-                }
-            }
-        }
-
-        true
+        self.empty_tiles == 0
     }
 
     /// Places a value on the sudoku board. Updates all related possible value
     /// caches and their counts.
     pub fn place(&mut self, (row, col): (usize, usize), value: u8) {
         assert!(value <= BOARD_SIZE as u8, "value `{}` is invalid", value);
+        if self.tiles[row][col].value == 0 && value != 0 {
+            self.empty_tiles -= 1;
+        }
         self.tiles[row][col].value = value;
 
         if value == 0 {
