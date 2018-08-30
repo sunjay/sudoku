@@ -21,7 +21,7 @@ pub enum ReadError {
     InvalidDigit(char),
 }
 
-#[derive(Debug, Clone, Copy, Default, Eq)]
+#[derive(Debug, Clone, Copy, Eq)]
 pub struct Tile {
     /// The numeric value of the tile - value between 1 and BOARD_SIZE (inclusive)
     /// None - tile is empty
@@ -36,6 +36,28 @@ pub struct Tile {
     /// A cache of the number of true values in possibleValues
     /// Not used if tile is not empty
     possible_count: usize,
+}
+
+impl Default for Tile {
+    fn default() -> Self {
+        // While we can't guarantee that an empty tile can have anything placed on it in every
+        // situation, implementing it this way saves us from having to have a more complicated
+        // implementation of Default for Sudoku
+        Tile {
+            value: None,
+            possible_values: [true; BOARD_SIZE],
+            possible_count: BOARD_SIZE,
+        }
+    }
+}
+
+impl fmt::Display for Tile {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.value {
+            Some(value) => write!(f, "{}", value),
+            None => write!(f, "0"),
+        }
+    }
 }
 
 impl PartialEq for Tile {
@@ -77,21 +99,10 @@ pub struct Sudoku {
 
 impl Default for Sudoku {
     fn default() -> Self {
-        let mut sudoku = Sudoku {
+        Sudoku {
             tiles: Default::default(),
             empty_tiles: BOARD_SIZE * BOARD_SIZE,
-        };
-        // Initialize the board to be completely empty and set all values as possible
-        for row in &mut sudoku.tiles {
-            for tile in row {
-                for value in &mut tile.possible_values {
-                    *value = true;
-                }
-                tile.possible_count = tile.possible_values.len();
-            }
         }
-
-        sudoku
     }
 }
 
@@ -99,7 +110,7 @@ impl fmt::Display for Sudoku {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for row in &self.tiles {
             for tile in row {
-                write!(f, "{}", tile.value.map(|x| x.get()).unwrap_or(0))?;
+                write!(f, "{}", tile)?;
             }
             writeln!(f)?;
         }
