@@ -21,7 +21,7 @@ pub enum ReadError {
     InvalidDigit(char),
 }
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, Eq)]
 pub struct Tile {
     /// The numeric value of the tile - value between 1 and BOARD_SIZE (inclusive)
     /// None - tile is empty
@@ -36,6 +36,12 @@ pub struct Tile {
     /// A cache of the number of true values in possibleValues
     /// Not used if tile is not empty
     possible_count: usize,
+}
+
+impl PartialEq for Tile {
+    fn eq(&self, other: &Self) -> bool {
+        self.value == other.value
+    }
 }
 
 impl Tile {
@@ -60,7 +66,7 @@ impl Tile {
     }
 }
 
-#[derive(Debug, Clone, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Sudoku {
     /// Tiles are stored row-wise
     /// So index with tiles[row][col]
@@ -99,26 +105,6 @@ impl fmt::Display for Sudoku {
         }
 
         Ok(())
-    }
-}
-
-impl PartialEq for Sudoku {
-    fn eq(&self, other: &Self) -> bool {
-        // Able to short-circuit faster if the number of empty tiles is different
-        if self.empty_tiles != other.empty_tiles {
-            return false;
-        }
-
-        // Boards should be the same if their tile values are the same regardless of the other
-        // metadata stored
-        for (row_a, row_b) in self.tiles.iter().zip(other.tiles.iter()) {
-            for (tile_a, tile_b) in row_a.iter().zip(row_b.iter()) {
-                if tile_a.value != tile_b.value {
-                    return false;
-                }
-            }
-        }
-        true
     }
 }
 
