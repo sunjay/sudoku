@@ -21,34 +21,84 @@ pub enum ReadError {
     InvalidDigit(char),
 }
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub struct Tile {
-    /// The numeric value of the tile - value between 1 and BOARD_SIZE (inclusive)
-    /// None - tile is empty
-    value: Option<NonZeroU8>,
+#[derive(Debug, Clone, Copy, Eq)]
+pub enum Tile {
+    /// Represents an empty tile with some non-zero set of possible values
+    Empty {
+        /// Represents every possible value that could be placed on this tile
+        ///
+        /// Each position is associated with a value in the range 1 to BOARD_SIZE+1
+        /// true if a value is available, false if a value cannot be used on this tile
+        possible_values: [bool; BOARD_SIZE],
 
-    /// Represents every possible value that could be placed on this tile
-    ///
-    /// Each position is associated with a value in the range 1 to BOARD_SIZE+1
-    /// true if a value is available, false if a value cannot be used on this tile
-    possible_values: [bool; BOARD_SIZE],
+        /// A cache of the number of true values in possible_values
+        /// Not used if tile is not empty
+        possible_count: usize,
+    },
+    /// Represents a tile that is filled in with a value
+    /// The numeric value of the tile is between 1 and BOARD_SIZE (inclusive)
+    Value(NonZeroU8),
+}
 
-    /// A cache of the number of true values in possibleValues
-    /// Not used if tile is not empty
-    possible_count: usize,
+impl Default for Tile {
+    fn default() -> Self {
+        // An empty tile can have any value placed on it
+        Tile::Empty {
+            possible_values: [true; BOARD_SIZE],
+            possible_count: BOARD_SIZE,
+        }
+    }
+}
+
+impl fmt::Display for Tile {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Tile::Empty { .. } => write!(f, "0"),
+            Tile::Value(value) => write!(f, "{}", value.get()),
+        }
+    }
+}
+
+impl PartialEq for Tile {
+    fn eq(&self, other: &Self) -> bool {
+        use self::Tile::*;
+        match (self, other) {
+            (Empty { .. }, Empty { .. }) => true,
+            (Value(x), Value(y)) if x == y => true,
+            _ => false,
+        }
+    }
 }
 
 impl Tile {
+    /// Returns true if this tile is empty
     pub fn is_empty(&self) -> bool {
-        self.value.is_none()
+        match self {
+            Tile::Empty { .. } => true,
+            Tile::Value(..) => false,
+        }
     }
 
-    pub fn set(&mut self, value: NonZeroU8) {
-        self.value = Some(value);
+    /// Marks the given value as no longer available for this tile
+    pub fn mark_unavailable(&mut self, value: NonZeroU8) {
+        match self {
+            Tile::Empty {possible_values, possible_count} => {
+                // The index at which this value will be found in all possible_values array
+                // This subtraction is safe because NonZeroU8 >= 1
+                let value_index = value.get() as usize - 1;
+                if possible_values[value_index] {
+                    // Tile was available, but now it is not
+                    possible_values[value_index] = false;
+                    *possible_count -= 1;
+                }
+            },
+            // No need to mark anything on tiles that aren't empty anymore
+            Tile::Value(..) => {},
+        }
     }
 }
 
-#[derive(Debug, Clone, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Sudoku {
     /// Tiles are stored row-wise
     /// So index with tiles[row][col]
@@ -59,21 +109,10 @@ pub struct Sudoku {
 
 impl Default for Sudoku {
     fn default() -> Self {
-        let mut sudoku = Sudoku {
+        Sudoku {
             tiles: Default::default(),
             empty_tiles: BOARD_SIZE * BOARD_SIZE,
-        };
-        // Initialize the board to be completely empty and set all values as possible
-        for row in &mut sudoku.tiles {
-            for tile in row {
-                for value in &mut tile.possible_values {
-                    *value = true;
-                }
-                tile.possible_count = tile.possible_values.len();
-            }
         }
-
-        sudoku
     }
 }
 
@@ -81,32 +120,12 @@ impl fmt::Display for Sudoku {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for row in &self.tiles {
             for tile in row {
-                write!(f, "{}", tile.value.map(|x| x.get()).unwrap_or(0))?;
+                write!(f, "{}", tile)?;
             }
             writeln!(f)?;
         }
 
         Ok(())
-    }
-}
-
-impl PartialEq for Sudoku {
-    fn eq(&self, other: &Self) -> bool {
-        // Able to short-circuit faster if the number of empty tiles is different
-        if self.empty_tiles != other.empty_tiles {
-            return false;
-        }
-
-        // Boards should be the same if their tile values are the same regardless of the other
-        // metadata stored
-        for (row_a, row_b) in self.tiles.iter().zip(other.tiles.iter()) {
-            for (tile_a, tile_b) in row_a.iter().zip(row_b.iter()) {
-                if tile_a.value != tile_b.value {
-                    return false;
-                }
-            }
-        }
-        true
     }
 }
 
@@ -163,45 +182,23 @@ impl Sudoku {
         if self.tiles[row][col].is_empty() {
             self.empty_tiles -= 1;
         }
-        self.tiles[row][col].set(value);
+        self.tiles[row][col] = Tile::Value(value);
 
         // The start index of this tile's box
         let box_row_start = (row / BOX_SIZE) * BOX_SIZE;
         let box_col_start = (col / BOX_SIZE) * BOX_SIZE;
 
-        // The index at which this value will be found in all possible_values array
-        let value_index = (value.get() - 1) as usize;
-
         for i in 0..BOARD_SIZE {
             // Update items in the same row as the placed tile
-            {
-                let item = &mut self.tiles[row][i];
-                if item.possible_values[value_index] {
-                    // Tile was available, now it is not
-                    item.possible_values[value_index] = false;
-                    item.possible_count -= 1;
-                }
-            }
+            self.tiles[row][i].mark_unavailable(value);
 
             // Update items in the same column as the placed tile
-            {
-                let item = &mut self.tiles[i][col];
-                if item.possible_values[value_index] {
-                    // Tile was available, now it is not
-                    item.possible_values[value_index] = false;
-                    item.possible_count -= 1;
-                }
-            }
+            self.tiles[i][col].mark_unavailable(value);
 
             // Update items in the same box as the placed tile
-            {
-                let item = &mut self.tiles[box_row_start + i / BOX_SIZE][box_col_start + i % BOX_SIZE];
-                if item.possible_values[value_index] {
-                    // Tile was available, now it is not
-                    item.possible_values[value_index] = false;
-                    item.possible_count -= 1;
-                }
-            }
+            let box_row = box_row_start + i / BOX_SIZE;
+            let box_col = box_col_start + i % BOX_SIZE;
+            self.tiles[box_row][box_col].mark_unavailable(value);
         }
     }
 
@@ -234,8 +231,7 @@ impl Sudoku {
         // right. I'm just betting that we'll guess wrong more often then
         // we guess right since there are more wrong numbers than right ones.
 
-        let (min_row, min_col) = self.min_possible_empty_tile()?;
-        let possible_values = self.tiles[min_row][min_col].possible_values;
+        let (min_row, min_col, possible_values) = self.min_possible_empty_tile()?;
 
         for i in 0..BOARD_SIZE {
             if !possible_values[i] {
@@ -244,7 +240,7 @@ impl Sudoku {
             }
 
             // The value at this index is to be used as the guess
-            // Each index in possibleValues represents a value from 1-9
+            // Each index in possible_values represents a value from 1-9
             // Adding 1 to the index produces the value
             // This unwrap is safe because a u8 is >= 0 and adding 1 means the value is >= 1
             let guess = NonZeroU8::new(i as u8 + 1).unwrap();
@@ -264,26 +260,29 @@ impl Sudoku {
     }
 
     // Returns the tile with the minimum number of possibilities
-    fn min_possible_empty_tile(&self) -> Result<(usize, usize), SolverError> {
+    fn min_possible_empty_tile(&self) -> Result<(usize, usize, [bool; BOARD_SIZE]), SolverError> {
         let mut min = Err(SolverError::NoSolution);
 
         for (row_i, row) in self.tiles.iter().enumerate() {
             for (col_i, tile) in row.iter().enumerate() {
-                // If the tile is already filled, move on
-                if !tile.is_empty() {
-                    continue;
-                }
-
-                min = match min {
-                    Err(_) => Ok((row_i, col_i, tile.possible_count)),
-                    Ok((_, _, possible_count)) if tile.possible_count < possible_count => {
-                        Ok((row_i, col_i, tile.possible_count))
-                    },
-                    _ => min,
+                match tile {
+                    // If the tile is already filled, move on
+                    Tile::Value(..) => continue,
+                    Tile::Empty {possible_values, possible_count} => {
+                        min = match min {
+                            Err(_) => Ok((row_i, col_i, possible_values, possible_count)),
+                            Ok((_, _, _, min_count)) if possible_count < min_count => {
+                                Ok((row_i, col_i, possible_values, possible_count))
+                            },
+                            _ => min,
+                        }
+                    }
                 }
             }
         }
 
-        min.map(|(row, col, _)| (row, col))
+        //FIXME: With non-lexical lifetimes, it would be possible to return &[bool; BOARD_SIZE]
+        // instead of copying here.
+        min.map(|(row, col, possible_values, _)| (row, col, *possible_values))
     }
 }
