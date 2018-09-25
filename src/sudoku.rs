@@ -164,6 +164,11 @@ impl Sudoku {
         self.empty_tiles == 0
     }
 
+    /// Provides a rating of the difficulty of a puzzle based on how many empty tiles there are
+    pub fn difficulty(&self) -> f64 {
+        1.0 - self.empty_tiles as f64 / (BOARD_SIZE*BOARD_SIZE) as f64
+    }
+
     /// Places a value on the sudoku board. Updates all related possible value
     /// caches and their counts.
     pub fn place(&mut self, (row, col): (usize, usize), value: NonZeroU8) {
