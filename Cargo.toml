@@ -20,7 +20,13 @@ bench = false
 [[bin]]
 name = "solve"
 bench = false
+required-features = ["std"]
 
 [[bench]]
 name = "sudoku_solver"
 harness = false
+
+[features]
+default = ["std"]
+# Disable this feature to use this crate in no_std environments
+std = []

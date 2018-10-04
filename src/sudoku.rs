@@ -1,6 +1,12 @@
+#[cfg(feature = "std")]
 use std::{
     fmt,
+    num::NonZeroU8,
     io::{self, Read},
+};
+#[cfg(not(feature = "std"))]
+use core::{
+    fmt,
     num::NonZeroU8,
 };
 
@@ -14,6 +20,7 @@ pub enum SolverError {
     NoSolution,
 }
 
+#[cfg(feature = "std")]
 #[derive(Debug)]
 pub enum ReadError {
     IOError(io::Error),
@@ -122,6 +129,7 @@ impl fmt::Display for Sudoku {
 impl Sudoku {
     /// Creates a new sudoku board by reading 9 rows of 9 digits representing the values currently
     /// filled and unfilled in the grid. 0 represents an empty tile.
+    #[cfg(feature = "std")]
     pub fn read_board<R: Read>(mut reader: R) -> Result<Self, ReadError> {
         debug_assert_eq!(BOARD_SIZE, 9, "This function assumes that BOARD_SIZE is 9");
 

@@ -1,5 +1,4 @@
 language: rust
-cache: cargo
 rust:
   - stable
   - beta
@@ -7,3 +6,9 @@ rust:
 matrix:
   allow_failures:
     - rust: nightly
+  fast_finish: true
+script:
+  - cargo build --verbose
+  # Remain no_std compatible
+  - cargo build --no-default-features --verbose
+  - cargo test --verbose
