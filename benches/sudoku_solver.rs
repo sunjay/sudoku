@@ -28,8 +28,8 @@ impl<'a> From<&'a [(usize, Sudoku)]> for BenchInput {
 }
 
 impl BenchInput {
-    fn iter_mut(&mut self) -> impl Iterator<Item=&mut (usize, Sudoku)> {
-        self.0.iter_mut()
+    fn into_iter(self) -> impl Iterator<Item=(usize, Sudoku)> {
+        self.0.into_iter()
     }
 }
 
@@ -52,7 +52,7 @@ macro_rules! solver_bench_group {
                 c.bench_function_over_inputs(concat!(stringify!($name), "_solve"),
                     |b: &mut Bencher, boards| b.iter_with_setup(
                         || boards.clone(),
-                        |mut boards: BenchInput| boards.iter_mut()
+                        |boards: BenchInput| boards.into_iter()
                             .map(|(i, board)| {
                                 board.solve().map_err(|_| format!("Unable to solve #{}", i))
                             })
