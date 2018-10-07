@@ -214,9 +214,9 @@ impl Sudoku {
     /// Attempts to solve the sudoku board
     ///
     /// Only fails if all possible solutions are exhausted
-    pub fn solve(self) -> Result<Self, SolverError> {
+    pub fn solve(&mut self) -> Result<(), SolverError> {
         if self.is_complete_board() {
-            Ok(self)
+            Ok(())
         }
         else {
             self.guess_solve()
@@ -230,7 +230,7 @@ impl Sudoku {
     /// If no solution is found, the initial guess is undone and the search
     /// continues
     /// Only fails if all possible solutions are exhausted.
-    fn guess_solve(self) -> Result<Self, SolverError> {
+    fn guess_solve(&mut self) -> Result<(), SolverError> {
         // Get the tile with the minimum number of possibilities
         // This is the most efficient place to start guessing because
         // if we guess wrong we will have the fewest number of alternatives
@@ -260,8 +260,9 @@ impl Sudoku {
             copy.place(min_pos, guess);
 
             // Try to solve the board with this guess
-            if let Ok(copy) = copy.solve() {
-                return Ok(copy);
+            if copy.solve().is_ok() {
+                *self = copy;
+                return Ok(())
             }
         }
 

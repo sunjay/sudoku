@@ -17,11 +17,11 @@ macro_rules! test_and_check {
                     println!("Testing board #{}...", i);
 
                     let test_copy = test_board.clone();
-                    let solved = test_board.solve()
+                    test_board.solve()
                         .map_err(|_| format!("Unable to solve #{}.\nTest board:\n{}\n\nSolution:\n{}", i, test_copy, solution))
                         .unwrap();
 
-                    assert_eq!(solved, solution, "\n#{} did not result in the correct solution\nTest board:\n{}\n\nExpected Solution:\n{}\nActual Solution:\n{}\n", i, solved, solution, test_copy);
+                    assert_eq!(test_board, solution, "\n#{} did not result in the correct solution\nTest board:\n{}\n\nExpected Solution:\n{}\nActual Solution:\n{}\n", i, test_copy, solution, test_board);
                 },
                 (None, None) => break,
                 _ => panic!("Test set and solutions mismatch"),
