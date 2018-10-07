@@ -28,6 +28,12 @@ pub enum ReadError {
     InvalidDigit(char),
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct Pos {
+    pub row: usize,
+    pub col: usize,
+}
+
 #[derive(Debug, Clone, Copy, Eq)]
 pub struct Tile {
     /// The numeric value of the tile - value between 1 and BOARD_SIZE (inclusive)
@@ -148,7 +154,7 @@ impl Sudoku {
                 if value.is_ascii_digit() {
                     // Only place the tile if the value is not zero
                     NonZeroU8::new(value - b'0').map(|value| {
-                        board.place((row_i, col_i), value);
+                        board.place(Pos {row: row_i, col: col_i}, value);
                     });
                 }
                 else {
@@ -179,7 +185,7 @@ impl Sudoku {
 
     /// Places a value on the sudoku board. Updates all related possible value
     /// caches and their counts.
-    pub fn place(&mut self, (row, col): (usize, usize), value: NonZeroU8) {
+    pub fn place(&mut self, Pos {row, col}: Pos, value: NonZeroU8) {
         debug_assert!(value.get() <= BOARD_SIZE as u8, "value `{}` is invalid", value);
         // Only decrement the empty tile count if the tile was previously empty
         if self.tiles[row][col].is_empty() {
@@ -234,8 +240,8 @@ impl Sudoku {
         // right. I'm just betting that we'll guess wrong more often then
         // we guess right since there are more wrong numbers than right ones.
 
-        let (min_row, min_col) = self.min_possible_empty_tile()?;
-        let possible_values = self.tiles[min_row][min_col].possible_values;
+        let min_pos = self.min_possible_empty_tile()?;
+        let possible_values = self.tiles[min_pos.row][min_pos.col].possible_values;
 
         for i in 0..BOARD_SIZE {
             if !possible_values[i] {
@@ -251,7 +257,7 @@ impl Sudoku {
 
             // Make a guess
             let mut copy = self.clone();
-            copy.place((min_row, min_col), guess);
+            copy.place(min_pos, guess);
 
             // Try to solve the board with this guess
             if copy.solve().is_ok() {
@@ -264,7 +270,7 @@ impl Sudoku {
     }
 
     // Returns the tile with the minimum number of possibilities
-    fn min_possible_empty_tile(&self) -> Result<(usize, usize), SolverError> {
+    fn min_possible_empty_tile(&self) -> Result<Pos, SolverError> {
         let mut min = Err(SolverError::NoSolution);
 
         for (row_i, row) in self.tiles.iter().enumerate() {
@@ -275,15 +281,15 @@ impl Sudoku {
                 }
 
                 min = match min {
-                    Err(_) => Ok((row_i, col_i, tile.possible_count)),
-                    Ok((_, _, possible_count)) if tile.possible_count < possible_count => {
-                        Ok((row_i, col_i, tile.possible_count))
+                    Err(_) => Ok((Pos {row: row_i, col: col_i}, tile.possible_count)),
+                    Ok((_, possible_count)) if tile.possible_count < possible_count => {
+                        Ok((Pos {row: row_i, col: col_i}, tile.possible_count))
                     },
                     _ => min,
                 }
             }
         }
 
-        min.map(|(row, col, _)| (row, col))
+        min.map(|(pos, _)| pos)
     }
 }
