@@ -86,6 +86,20 @@ This will produce an executable that you can run with the following command:
 $ ./target/release/solve
 ```
 
+## Benchmarking
+
+To save a baseline measurement **before** making changes:
+
+```
+cargo bench -- --save-baseline <baseline name>
+```
+
+To compare your latest changes to that baseline:
+
+```
+cargo bench -- --baseline <baseline name>
+```
+
 [Rust programming language]: https://www.rust-lang.org
 [c-impl]: https://github.com/sunjay/sudoku/tree/master/c-impl
 [rustup.rs]: https://rustup.rs/
